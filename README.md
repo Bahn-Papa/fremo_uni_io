@@ -1,4 +1,4 @@
-# FREMO Key box
+# FREMO Universal Board
 
 This program will control a FREMO universal board.
 
@@ -7,4 +7,4 @@ Each pin can be confiured:<br>
 * to be an input or an output
 * to work inverse
 * to act as sensor or switch on Loconet side
-Each I/O will get an individual Loconet address.
+* to get an individual Loconet address
