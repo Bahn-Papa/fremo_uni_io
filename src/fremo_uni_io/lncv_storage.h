@@ -14,6 +14,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		Date: 15.02.2022
+//#
+//#	Implementation:
+//#		-	add function GetAsInputs()
+//#			the function will return a bit mask where each '1' bit
+//#			stands for an input
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		Date: 14.02.2022
 //#
 //#	Implementation:
@@ -85,6 +94,13 @@ class LncvStorageClass
 		inline uint16_t	GetAsOutputs( void )
 		{
 			return( m_uiOutputs );
+		};
+
+		//----------------------------------------------------------
+		//
+		inline uint16_t	GetAsInputs( void )
+		{
+			return( ~m_uiOutputs );
 		};
 
 		//----------------------------------------------------------
