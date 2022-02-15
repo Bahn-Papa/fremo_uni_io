@@ -7,6 +7,19 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		vom: 15.02.2022
+//#
+//#	Implementation:
+//#		-	remove the check for 'send only input messages' in function
+//#			'SendMessage()', because this check is performed elsewhere
+//#
+//#	Bugfix:
+//#		-	handled messages for inputs instead for outputs in function
+//#			'LoconetReceived()'
+//#			this bug is fixed now
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		vom: 14.02.2022
 //#
 //#	Implementation:
@@ -63,12 +76,13 @@ lnMsg			*g_pLnPacket;
 //==========================================================================
 
 
-///////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 //	CLASS: MyLoconetClass
 //
 
-//*****************************************************************
+//******************************************************************
 //	Constructor
+//------------------------------------------------------------------
 //
 MyLoconetClass::MyLoconetClass()
 {
@@ -77,8 +91,9 @@ MyLoconetClass::MyLoconetClass()
 }
 
 
-//*****************************************************************
+//******************************************************************
 //	Init
+//------------------------------------------------------------------
 //
 void MyLoconetClass::Init( void )
 {
@@ -86,8 +101,9 @@ void MyLoconetClass::Init( void )
 }
 
 
-//*****************************************************************
+//******************************************************************
 //	CheckForAndHandleMessage
+//------------------------------------------------------------------
 //
 void MyLoconetClass::CheckForMessage( void )
 {
@@ -103,9 +119,9 @@ void MyLoconetClass::CheckForMessage( void )
 }
 
 
-//**********************************************************************
+//******************************************************************
 //	LoconetReceived
-//----------------------------------------------------------------------
+//------------------------------------------------------------------
 //	This function checks if the received message is for 'us'.
 //	This is done by checking whether the address of the message
 //	matches one of the stored addresses.
@@ -117,29 +133,29 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 										uint8_t dir,
 										uint8_t			)
 {
-	uint16_t	asInputs	= ~g_clLncvStorage.GetAsOutputs();
-	uint16_t	asSensor	=  g_clLncvStorage.GetAsSensor();
-	uint16_t	isInverse	=  g_clLncvStorage.GetIsInverse();
-	uint16_t	ioAddress	=  0;
-	uint16_t	mask		=  0x0001;
-	bool		bFound		=  false;
+	uint16_t	asOutputs	= g_clLncvStorage.GetAsOutputs();
+	uint16_t	asSensor	= g_clLncvStorage.GetAsSensor();
+	uint16_t	isInverse	= g_clLncvStorage.GetIsInverse();
+	uint16_t	ioAddress	= 0;
+	uint16_t	mask		= 0x0001;
+	bool		bFound		= false;
 
 	for( uint8_t idx = 0 ; !bFound && (idx < IO_NUMBERS) ; idx++ )
 	{
-		//--------------------------------------------------------------
-		//	first check if the pin 'idx' is an input
+		//----------------------------------------------------------
+		//	first check if the pin 'idx' is an output
 		//	if so, process the message
 		//
-		if( asInputs & mask )
+		if( asOutputs & mask )
 		{
-			//----------------------------------------------------------
+			//------------------------------------------------------
 			//	second check if we are searching for an address in
 			//	a sensor message or in a switch message.
 			//
 			//	isSensor == false	we are looking for switch messages
 			//	isSensor == true	we are looking for sensor messages
 			//
-			//	configRecv will hold the info if the message at the
+			//	'asSensor' will hold the info if the message at the
 			//	actual bit position (mask) is expected to be
 			//	a sensor message or a switch message.
 			//	(bit set => sensor message)
@@ -150,7 +166,7 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 
 				if(	(0 < ioAddress) && (adr == ioAddress) )
 				{
-					//--------------------------------------------------
+					//----------------------------------------------
 					//	This is one of our addresses, ergo go on
 					//	with the processing
 					//
@@ -204,67 +220,59 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 void MyLoconetClass::SendMessage( uint16_t adr, uint16_t mask, uint8_t dir )
 {
 	//--------------------------------------------------------------
-	//	first check if the pin 'idx' is an output
-	//	if so, process the message
+	//	send the message only if there is an address for it
 	//
-	if( g_clLncvStorage.GetAsOutputs() & mask )
+	if( 0 < adr )
 	{
 		//----------------------------------------------------------
-		//	second send the message only if there is
-		//	an address for it
+		//	Check if 'dir' should be inverted
 		//
-		if( 0 < adr )
+		if( g_clLncvStorage.GetIsInverse() & mask )
 		{
-			//------------------------------------------------------
-			//	Check if 'dir' should be inverted
-			//
-			if( g_clLncvStorage.GetIsInverse() & mask )
+			if( 0 < dir )
 			{
-				if( 0 < dir )
-				{
-					dir = 0;
-				}
-				else
-				{
-					dir = 1;
-				}
-			}
-
-			//------------------------------------------------------
-			//	Check if this should be a sensor or
-			//	a switch message
-			//
-			if( g_clLncvStorage.GetAsSensor() & mask )
-			{
-				//----	sensor message  ----------------------------
-				//
-				LocoNet.reportSensor( adr, dir );
-
-#ifdef DEBUGGING_PRINTOUT
-//				g_clDebugging.PrintReportSensorMsg( adr, dir );
-#endif
+				dir = 0;
 			}
 			else
 			{
-				//----	switch message  ----------------------------
-				//
-				LocoNet.requestSwitch( adr, 1, dir );
+				dir = 1;
+			}
+		}
+
+		//----------------------------------------------------------
+		//	Check if this should be a sensor or
+		//	a switch message
+		//
+		if( g_clLncvStorage.GetAsSensor() & mask )
+		{
+			//----	sensor message  --------------------------------
+			//
+			LocoNet.reportSensor( adr, dir );
 
 #ifdef DEBUGGING_PRINTOUT
-//				g_clDebugging.PrintReportSwitchMsg( adr, dir );
+//			g_clDebugging.PrintReportSensorMsg( adr, dir );
 #endif
+		}
+		else
+		{
+			//----	switch message  --------------------------------
+			//
+			LocoNet.requestSwitch( adr, 1, dir );
 
-				//----	wait befor sending the next message  -------
-				//
-				delay( g_clLncvStorage.GetSendDelayTime() );
-
-				LocoNet.requestSwitch( adr, 0, dir );
-			}
+#ifdef DEBUGGING_PRINTOUT
+//			g_clDebugging.PrintReportSwitchMsg( adr, dir );
+#endif
 
 			//----	wait befor sending the next message  -----------
 			//
 			delay( g_clLncvStorage.GetSendDelayTime() );
+
+			LocoNet.requestSwitch( adr, 0, dir );
 		}
+
+		//----	wait befor sending the next message  ---------------
+		//
+		delay( g_clLncvStorage.GetSendDelayTime() );
 	}
 }
 
@@ -357,7 +365,7 @@ int8_t notifyLNCVprogrammingStart( uint16_t &ArtNr, uint16_t &ModuleAddress )
 	{
 		if( 0xFFFF == ModuleAddress )
 		{
-			//----	broadcast, so give Module Address back  -------
+			//----	broadcast, so give Module Address back  --------
 			g_clMyLoconet.SetProgMode( true );
 
 			ModuleAddress	= g_clLncvStorage.GetModuleAddress();
@@ -433,6 +441,7 @@ int8_t notifyLNCVread( uint16_t ArtNr, uint16_t Address, uint16_t, uint16_t &Val
 
 //**********************************************************************
 //	notifyLNCVwrite
+//----------------------------------------------------------------------
 //
 int8_t notifyLNCVwrite( uint16_t ArtNr, uint16_t Address, uint16_t Value )
 {
