@@ -9,7 +9,7 @@
 
 #define VERSION_MAIN	0
 #define	VERSION_MINOR	9
-#define VERSION_HOTFIX	0
+#define VERSION_HOTFIX	1
 
 
 //##########################################################################
@@ -18,7 +18,23 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	Version: 0.09.0		vom: 14.02.2022
+//#	Version: 0.09.01	vom: 15.02.2022
+//#
+//#	Implementation:
+//#		-	remove the check for 'send only input messages' in function
+//#			'SendMessage()', because this check is performed elsewhere
+//#		-	add function GetAsInputs()
+//#			the function will return a bit mask where each '1' bit
+//#			stands for an input
+//#
+//#	Bugfix:
+//#		-	correction of initial state in function 'setup()'
+//#		-	handled messages for inputs instead for outputs in function
+//#			'LoconetReceived()'. This bug is fixed now
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: 0.09.00	vom: 14.02.2022
 //#
 //#	Implementation:
 //#		-	first working version
@@ -50,6 +66,7 @@
 //==========================================================================
 
 #define READ_INPUTS_TIME		20
+#define PRINT_STATUS_TIME		250
 
 
 //==========================================================================
@@ -58,7 +75,8 @@
 //
 //==========================================================================
 
-uint32_t	g_ulReadInputTimer;
+uint32_t	g_ulReadInputTimer		= 0L;
+uint32_t	g_ulPrintStatusTimer	= 0L;
 uint16_t	g_uiLnState;
 uint16_t	g_uiIOState;
 bool		g_bIsProgMode;
@@ -83,15 +101,18 @@ void (*resetFunc)( void ) = 0;
 //	CheckLnState
 //--------------------------------------------------------------------------
 //
-void CheckLnState( uint16_t uiLnState )
+void CheckLnState( uint16_t uiNewLnState )
 {
-	uint16_t	uiDiff		= g_uiLnState ^ uiLnState;
+	//------------------------------------------------------------------
+	//	get difference between old and actual state ...
+	//
+	uint16_t	uiDiff		= g_uiLnState ^ uiNewLnState;
 	uint16_t	uiMask		= 0x0001;
 	uint8_t		usDir		= 0;
 	uint8_t		idx			= 0;
 
 	//------------------------------------------------------------------
-	//	handle only outputs
+	//	... but handle outputs only
 	//
 	uiDiff &= g_clLncvStorage.GetAsOutputs();
 
@@ -102,7 +123,7 @@ void CheckLnState( uint16_t uiLnState )
 	{
 		if( uiDiff & uiMask )
 		{
-			if( uiLnState & uiMask )
+			if( uiNewLnState & uiMask )
 			{
 				usDir = 1;
 			}
@@ -113,6 +134,10 @@ void CheckLnState( uint16_t uiLnState )
 
 			g_clControl.SetOutput( idx, usDir );
 
+			//----------------------------------------------------------
+			//	this change was handled,
+			//	so clear the corresponding bit
+			//
 			uiDiff &= ~uiMask;
 		}
 
@@ -120,7 +145,7 @@ void CheckLnState( uint16_t uiLnState )
 		uiMask <<= 1;
 	}
 
-	g_uiLnState = uiLnState;
+	g_uiLnState = uiNewLnState;
 }
 
 
@@ -130,7 +155,7 @@ void CheckLnState( uint16_t uiLnState )
 //
 uint16_t GetIOState( void )
 {
-	uint16_t	uiInputs	= ~g_clLncvStorage.GetAsOutputs();
+	uint16_t	uiInputs	= g_clLncvStorage.GetAsInputs();
 	uint16_t	uiIOState	= 0x0000;
 	uint16_t	uiMask		= 0x0001;
 
@@ -158,19 +183,20 @@ uint16_t GetIOState( void )
 //	CheckIOState
 //--------------------------------------------------------------------------
 //
-void CheckIOState( uint16_t uiIOState )
+void CheckIOState( uint16_t uiNewIOState )
 {
-	uint16_t	uiInputs	= ~g_clLncvStorage.GetAsOutputs();
-	uint16_t	uiDiff		= g_uiIOState;
-	uint16_t	uiMask		= 0x0001;
-	uint8_t		usDir		= 0;
-	uint8_t		idx			= 0;
+	//------------------------------------------------------------------
+	//	get difference between old and actual state ...
+	//
+	uint16_t	uiDiff	= g_uiIOState ^ uiNewIOState;
+	uint16_t	uiMask	= 0x0001;
+	uint8_t		usDir	= 0;
+	uint8_t		idx		= 0;
 
 	//------------------------------------------------------------------
-	//	handle only inputs
+	//	... but handle inputs only
 	//
-	uiDiff  = g_uiIOState ^ uiIOState;
-	uiDiff &= uiInputs;
+	uiDiff &= g_clLncvStorage.GetAsInputs();
 
 	//------------------------------------------------------------------
 	//	now for each change send the appropriate Loconet message
@@ -179,7 +205,7 @@ void CheckIOState( uint16_t uiIOState )
 	{
 		if( uiDiff & uiMask )
 		{
-			if( uiIOState & uiMask )
+			if( uiNewIOState & uiMask )
 			{
 				usDir = 1;
 			}
@@ -190,6 +216,10 @@ void CheckIOState( uint16_t uiIOState )
 
 			g_clMyLoconet.SendMessage( g_clLncvStorage.GetIOAddress( idx ), uiMask, usDir );
 
+			//----------------------------------------------------------
+			//	this change was handled,
+			//	so clear the corresponding bit
+			//
 			uiDiff &= ~uiMask;
 		}
 
@@ -197,7 +227,7 @@ void CheckIOState( uint16_t uiIOState )
 		uiMask <<= 1;
 	}
 
-	g_uiIOState = uiIOState;
+	g_uiIOState = uiNewIOState;
 }
 
 
@@ -216,6 +246,9 @@ void setup()
 
 #ifdef DEBUGGING_PRINTOUT
 	g_clDebugging.Init();
+
+	g_clDebugging.PrintTitle( VERSION_MAIN, VERSION_MINOR, VERSION_HOTFIX );
+	g_clDebugging.PrintInfoLine( infoLineInit );
 #endif
 
 	//----	LNCV: Check and Init  --------------------------------------
@@ -233,12 +266,6 @@ void setup()
 	g_clControl.Init( uiAsOutput );
 	g_clMyLoconet.Init();
 
-	//----	some setup tests  ------------------------------------------
-#ifdef DEBUGGING_PRINTOUT
-	g_clDebugging.PrintTitle( VERSION_MAIN, VERSION_MINOR, VERSION_HOTFIX );
-	g_clDebugging.PrintInfoLine( infoLineInit );
-#endif
-
 	delay( 200 );
 
 	//----	Prepare Display  -------------------------------------------
@@ -250,16 +277,18 @@ void setup()
 	//------------------------------------------------------------------
 	//	get the actual input and output state and set the I/O pins
 	//	respective send the appropriate LN messages
+	//	the trick here is to set the old state values as inverted
+	//	actual states to get all I/Os set and LN messages send
 	//
-	g_uiIOState		= GetIOState();		//	actual state
-	uiIOStateStart	= ~g_uiIOState;		//	trick to send all messages
-	uiIOStateStart &= ~uiAsOutput;		//	but only for inputs
+	uiIOStateStart	 = GetIOState();	//	actual state
+	g_uiIOState		 = ~uiIOStateStart;	//	trick to send all messages
+	g_uiIOState		&= ~uiAsOutput;		//	but only for inputs
 
 	CheckIOState( uiIOStateStart );		//	send messages
 	
-	g_uiLnState		= g_clMyLoconet.GetInputStatus();	//	actual state
-	uiLnStateStart	= ~g_uiLnState;		//	trick to set all pins
-	uiLnStateStart &= uiAsOutput;		//	but only for outputs
+	uiLnStateStart	 = g_clMyLoconet.GetInputStatus();	//	actual state
+	g_uiLnState		 = ~uiLnStateStart;	//	trick to set all pins
+	g_uiLnState		&= uiAsOutput;		//	but only for outputs
 
 	CheckLnState( uiLnStateStart );		//	set output pins
 
@@ -315,7 +344,12 @@ void loop()
 	//	print actual status
 	//
 #ifdef DEBUGGING_PRINTOUT
-	g_clDebugging.PrintStatus(	g_clLncvStorage.GetAsOutputs(),
-								g_uiIOState, g_uiLnState		);
+	if( millis() > g_ulPrintStatusTimer )
+	{
+		g_ulPrintStatusTimer = millis() + PRINT_STATUS_TIME;
+
+		g_clDebugging.PrintStatus(	g_clLncvStorage.GetAsOutputs(),
+									g_uiIOState, g_uiLnState		);
+	}
 #endif
 }
