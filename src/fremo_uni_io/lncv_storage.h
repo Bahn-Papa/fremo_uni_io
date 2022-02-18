@@ -149,7 +149,7 @@ class LncvStorageClass
 				uiOffDelay = m_aruiOffDelay[ idx ];
 			}
 			
-			return( uiAddress );
+			return( uiOffDelay );
 		}
 
 	private:
