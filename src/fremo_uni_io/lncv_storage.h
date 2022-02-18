@@ -14,6 +14,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	3		Date: 18.02.2022
+//#
+//#	Implementation:
+//#		-	add off delay time array
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		Date: 15.02.2022
 //#
 //#	Implementation:
@@ -131,6 +138,20 @@ class LncvStorageClass
 			return( uiAddress );
 		}
 
+		//----------------------------------------------------------
+		//
+		inline uint16_t	GetIOOffDelay( uint8_t idx )
+		{
+			uint16_t	uiOffDelay = 0;
+
+			if( IO_NUMBERS > idx )
+			{
+				uiOffDelay = m_aruiOffDelay[ idx ];
+			}
+			
+			return( uiAddress );
+		}
+
 	private:
 		uint16_t	m_uiArticleNumber;
 		uint16_t	m_uiModuleAddress;
@@ -139,7 +160,8 @@ class LncvStorageClass
 		uint16_t	m_uiOutputs;
 		uint16_t	m_uiSensors;
 		uint16_t	m_uiInverse;
-		uint16_t	m_aruiAddress[ IO_NUMBERS ];
+		uint16_t	m_aruiAddress[  IO_NUMBERS ];
+		uint16_t	m_aruiOffDelay[ IO_NUMBERS ];
 };
 
 

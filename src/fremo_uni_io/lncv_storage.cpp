@@ -11,6 +11,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		vom: 18.02.2022
+//#
+//#	Implementation:
+//#		-	add off delay time array
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		Date: 14.02.2022
 //#
 //#	Implementation:
@@ -59,22 +66,24 @@ LncvStorageClass	g_clLncvStorage = LncvStorageClass();
 //----------------------------------------------------------------------
 //	address definitions for config informations
 //
-#define LNCV_ADR_MODULE_ADDRESS		0
-#define LNCV_ADR_ARTIKEL_NUMMER		1
-#define LNCV_ADR_CONFIGURATION		2
-#define LNCV_ADR_SEND_DELAY			3
-#define LNCV_ADR_OUTPUTS			4
-#define LNCV_ADR_SENSORS			5
-#define LNCV_ADR_INVERSE			6
-#define LNCV_ADR_FIRST_IO_ADDRESS	11
-#define LNCV_ADR_LAST_IO_ADDRESS	26
+#define LNCV_ADR_MODULE_ADDRESS			0
+#define LNCV_ADR_ARTIKEL_NUMMER			1
+#define LNCV_ADR_CONFIGURATION			2
+#define LNCV_ADR_SEND_DELAY				3
+#define LNCV_ADR_OUTPUTS				4
+#define LNCV_ADR_SENSORS				5
+#define LNCV_ADR_INVERSE				6
+#define LNCV_ADR_FIRST_IO_ADDRESS		11
+#define LNCV_ADR_LAST_IO_ADDRESS		26
+#define LNCV_ADR_FIRST_DELAY_ADDRESS	31
+#define LNCV_ADR_LAST_DELAY_ADDRESS		46
 
 
 //----------------------------------------------------------------------
 //	delay times
 //
-#define	MIN_SEND_DELAY_TIME			 5
-#define DEFAULT_SEND_DELAY_TIME		10
+#define	MIN_SEND_DELAY_TIME				 5
+#define DEFAULT_SEND_DELAY_TIME			10
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -101,7 +110,7 @@ void LncvStorageClass::CheckEEPROM( void )
 {
 	uint8_t	byte0	= eeprom_read_byte( (uint8_t *)0 );
 	uint8_t	byte1	= eeprom_read_byte( (uint8_t *)1 );
-	uint8_t	idx		= LNCV_ADR_LAST_IO_ADDRESS;
+	uint8_t	idx		= LNCV_ADR_LAST_DELAY_ADDRESS;
 	
 
 #ifdef DEBUGGING_PRINTOUT
@@ -127,7 +136,7 @@ void LncvStorageClass::CheckEEPROM( void )
 		WriteLNCV( LNCV_ADR_INVERSE, 0 );							//	all not inverse
 		
 		//----------------------------------------------------------
-		//	set all I/O addresses to '0'
+		//	set all I/O addresses and delay times to '0'
 		//
 		while( LNCV_ADR_INVERSE < idx )
 		{
@@ -171,11 +180,12 @@ void LncvStorageClass::Init( void )
 	}
 
 	//--------------------------------------------------------------
-	//	read IO addresses
+	//	read IO addresses and delay times
 	//
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
-		m_aruiAddress[ idx ] = ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS + idx );
+		m_aruiAddress[  idx ] = ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS    + idx );
+		m_aruiOffDelay[ idx ] = ReadLNCV( LNCV_ADR_FIRST_DELAY_ADDRESS + idx );
 	}
 }
 
@@ -185,7 +195,7 @@ void LncvStorageClass::Init( void )
 //
 bool LncvStorageClass::IsValidLNCVAddress( uint16_t Adresse )
 {
-	if( LNCV_ADR_LAST_IO_ADDRESS >= Adresse )
+	if( LNCV_ADR_LAST_DELAY_ADDRESS >= Adresse )
 	{
 		return( true );
 	}
