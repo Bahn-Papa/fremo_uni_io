@@ -7,14 +7,29 @@
 //##########################################################################
 
 
-#define VERSION_MAIN	0
-#define	VERSION_MINOR	9
-#define VERSION_HOTFIX	1
+#define VERSION_MAIN	1
+#define	VERSION_MINOR	0
+#define VERSION_HOTFIX	0
 
 
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: 1.00.00	vom: 18.02.2022
+//#
+//#	Implementation:
+//#		-	add some comments an explanations
+//#		-	all test were good, so set version to 1.0.0
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: 0.09.02	vom: 16.02.2022
+//#
+//#	Bugfix:
+//#		-	mismatch of input and output state corrected
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -349,7 +364,7 @@ void loop()
 		g_ulPrintStatusTimer = millis() + PRINT_STATUS_TIME;
 
 		g_clDebugging.PrintStatus(	g_clLncvStorage.GetAsOutputs(),
-									g_uiIOState, g_uiLnState		);
+									g_uiLnState, g_uiIOState		);
 	}
 #endif
 }

@@ -2,8 +2,16 @@
 //#
 //#		DebuggingClass
 //#
-//#	Diese Klasse liefert Textausgaben an verschiedene Ausgabegeräte,
-//#	z.B.: Serielle Schnittstelle oder OLED Display.
+//#	This class deliveres text print outs to different output devices such
+//#	as seriell interface or OLED display
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	2		vom: 18.02.2022
+//#
+//#	Bug fix:
+//#		-	correction of mismatch of inputs and outputs in function
+//#			'PrintStatus()'
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -373,10 +381,10 @@ void DebuggingClass::PrintStatus(	uint16_t uiAsOutputs,
 									uint16_t uiInState )
 {
 	g_clDisplay.SetCursor( INPUT_STATE_LINE, STATE_COLUMN );
-	PrintStatusBits( ~uiAsOutputs, uiInState );
+	PrintStatusBits( uiAsOutputs, uiInState );
 
 	g_clDisplay.SetCursor( OUTPUT_STATE_LINE, STATE_COLUMN );
-	PrintStatusBits( uiAsOutputs, uiOutState );
+	PrintStatusBits( ~uiAsOutputs, uiOutState );
 }
 
 

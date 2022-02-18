@@ -29,6 +29,23 @@
 //#		SV 4	6		 1			PD 5
 //#		SV 4	5		 0			PD 6
 //#
+//#	To simplify the program code the mapping is done with the help
+//#	of a few arrays. The trick is to use the universal pin number (IO pin)
+//#	as array index for the different mapping arrays.
+//#	The following mappings are needed:
+//#		-	pin of port
+//#		-	input  mask for data direction
+//#		-	output mask for data direction
+//#		-	read an input
+//#		-	set an output
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	2		vom: 18.02.2022
+//#
+//#	Implementation:
+//#		-	add support for board version 2
+//#
 //#-------------------------------------------------------------------------
 //#
 //#	File version:	1		vom: 14.02.2022
@@ -88,18 +105,28 @@ uint8_t GetKeyStatePortF( uint8_t usMask );
 
 
 //---------------------------------------------------------------------
-//	Port B
-//		PB0		LED GREEN
-//		PB1		LED RED
-//		PB2		N/A
-//		PB3		N/A
-//		PB4		Input Output
-//		PB5		Input Output
-//		PB6		Input Output
-//		PB7		Input Output
+//	Port B			V1				V2
+//		PB0		LED GREEN		Relais
+//		PB1		LED RED			LED RED
+//		PB2		N/A				LED GREEN
+//		PB3		N/A				N/A
+//		PB4		Input Output	Input Output
+//		PB5		Input Output	Input Output
+//		PB6		Input Output	Input Output
+//		PB7		Input Output	Input Output
 //
-#define LED_GREEN			0
-#define LED_RED				1
+#if PLATINE_VERSION == 1
+
+	#define LED_GREEN		_BV( 0 )
+
+#else
+
+	#define RELAIS			_BV( 0 )
+	#define LED_GREEN		_BV( 2 )
+
+#endif
+
+#define LED_RED				_BV( 1 )
 
 
 //---------------------------------------------------------------------
@@ -198,52 +225,19 @@ uint32_t			g_ulMillisFlash	= 0L;
 
 typedef uint8_t (*func_ptr_t)( uint8_t );
 
-func_ptr_t	g_arFunctions[ IO_NUMBERS ] =
-{
-	GetKeyStatePortD,
-	GetKeyStatePortD,
-	GetKeyStatePortD,
-	GetKeyStatePortB,
-	GetKeyStatePortB,
-	GetKeyStatePortE,
-	GetKeyStatePortC,
-	GetKeyStatePortC,
-	GetKeyStatePortB,
-	GetKeyStatePortB,
-	GetKeyStatePortF,
-	GetKeyStatePortF,
-	GetKeyStatePortF,
-	GetKeyStatePortF,
-	GetKeyStatePortF,
-	GetKeyStatePortF
-};
-
-
+//----------------------------------------------------------------------
+//	this array contains the mapping	universal pin numbering to
+//	pin of port
+//
 uint8_t	g_arPortPins[ IO_NUMBERS ] =
 {
 	PB6, PB5, PB7, PB7, PB4, PB2, PB7, PB6, PB6, PB5, PB7, PB6, PB5, PB4, PB1, PB0
 };
 
-volatile uint8_t * g_arPorts[ IO_NUMBERS ] =
-{
-	&PORTD,
-	&PORTD,
-	&PORTD,
-	&PORTB,
-	&PORTB,
-	&PORTE,
-	&PORTC,
-	&PORTC,
-	&PORTB,
-	&PORTB,
-	&PORTF,
-	&PORTF,
-	&PORTF,
-	&PORTF,
-	&PORTF,
-	&PORTF
-};
-
+//----------------------------------------------------------------------
+//	this array contains the mapping universal pin numbering to
+//	address of variable containing the input mask of a port
+//
 volatile uint8_t * g_arInputMasks[ IO_NUMBERS ] =
 {
 	&g_usPortDInputs,
@@ -264,6 +258,10 @@ volatile uint8_t * g_arInputMasks[ IO_NUMBERS ] =
 	&g_usPortFInputs
 };
 
+//----------------------------------------------------------------------
+//	this array contains the mapping universal pin numbering to
+//	address of variable containing the output mask of a port
+//
 volatile uint8_t * g_arOutputMasks[ IO_NUMBERS ] =
 {
 	&g_usPortDOutputs,
@@ -284,6 +282,54 @@ volatile uint8_t * g_arOutputMasks[ IO_NUMBERS ] =
 	&g_usPortFOutputs
 };
 
+//----------------------------------------------------------------------
+//	this array contains the mapping universal pin numbering to
+//	address of function for reading the inputs of a port
+//
+func_ptr_t	g_arFunctions[ IO_NUMBERS ] =
+{
+	GetKeyStatePortD,
+	GetKeyStatePortD,
+	GetKeyStatePortD,
+	GetKeyStatePortB,
+	GetKeyStatePortB,
+	GetKeyStatePortE,
+	GetKeyStatePortC,
+	GetKeyStatePortC,
+	GetKeyStatePortB,
+	GetKeyStatePortB,
+	GetKeyStatePortF,
+	GetKeyStatePortF,
+	GetKeyStatePortF,
+	GetKeyStatePortF,
+	GetKeyStatePortF,
+	GetKeyStatePortF
+};
+
+//----------------------------------------------------------------------
+//	this array contains the mapping universal pin numbering to
+//	address of port to set an output
+//
+volatile uint8_t * g_arPorts[ IO_NUMBERS ] =
+{
+	&PORTD,
+	&PORTD,
+	&PORTD,
+	&PORTB,
+	&PORTB,
+	&PORTE,
+	&PORTC,
+	&PORTC,
+	&PORTB,
+	&PORTB,
+	&PORTF,
+	&PORTF,
+	&PORTF,
+	&PORTF,
+	&PORTF,
+	&PORTF
+};
+
 
 //==========================================================================
 //
@@ -291,6 +337,10 @@ volatile uint8_t * g_arOutputMasks[ IO_NUMBERS ] =
 //
 //==========================================================================
 
+//----------------------------------------------------------------------
+//	the functions just serve as mapping functions to
+//	the class functions for each port
+//
 uint8_t GetKeyStatePortB( uint8_t usMask )
 {
 	return( g_clPortB.GetKeyState( usMask ) );
@@ -358,6 +408,18 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 
 	m_uiOutputs = uiOutputs;
 
+	//--------------------------------------------------------------
+	//	identify the input and output mask for each port
+	//
+	//	the trick here is that the addresses of the variables
+	//	holding the mask are stored in an array just as the
+	//	port pins. The mapping of universal pin numbering to ports
+	//	is done by storing the right variable address into
+	//	the right array place and storing the right pin number
+	//	into the right arry place
+	//	So the only thing to do here is to find out if a universal
+	//	pin is configured as output or as input
+	//
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
 		if( uiOutputs & uiMask )
@@ -372,152 +434,6 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 		uiMask <<= 1;
 	}
 
-/*
-	if( uiOutputs & MASK_IO_BIT_0 )
-	{
-		m_usPortDOutputs |= MASK_PORT_BIT_6;
-	}
-	else
-	{
-		m_usPortDInputs |= MASK_PORT_BIT_6;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_1 )
-	{
-		m_usPortDOutputs |= MASK_PORT_BIT_5;
-	}
-	else
-	{
-		m_usPortDInputs |= MASK_PORT_BIT_5;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_2 )
-	{
-		m_usPortDOutputs |= MASK_PORT_BIT_7;
-	}
-	else
-	{
-		m_usPortDInputs |= MASK_PORT_BIT_7;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_3 )
-	{
-		m_usPortBOutputs |= MASK_PORT_BIT_7;
-	}
-	else
-	{
-		m_usPortBInputs |= MASK_PORT_BIT_7;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_4 )
-	{
-		m_usPortBOutputs |= MASK_PORT_BIT_4;
-	}
-	else
-	{
-		m_usPortBInputs |= MASK_PORT_BIT_4;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_5 )
-	{
-		m_usPortEOutputs |= MASK_PORT_BIT_2;
-	}
-	else
-	{
-		m_usPortEInputs |= MASK_PORT_BIT_2;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_6 )
-	{
-		m_usPortCOutputs |= MASK_PORT_BIT_7;
-	}
-	else
-	{
-		m_usPortCInputs |= MASK_PORT_BIT_7;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_7 )
-	{
-		m_usPortCOutputs |= MASK_PORT_BIT_6;
-	}
-	else
-	{
-		m_usPortCInputs |= MASK_PORT_BIT_6;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_8 )
-	{
-		m_usPortBOutputs |= MASK_PORT_BIT_6;
-	}
-	else
-	{
-		m_usPortBInputs |= MASK_PORT_BIT_6;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_9 )
-	{
-		m_usPortBOutputs |= MASK_PORT_BIT_5;
-	}
-	else
-	{
-		m_usPortBInputs |= MASK_PORT_BIT_5;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_10 )
-	{
-		m_usPortFOutputs |= MASK_PORT_BIT_7;
-	}
-	else
-	{
-		m_usPortFInputs |= MASK_PORT_BIT_7;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_11 )
-	{
-		m_usPortFOutputs |= MASK_PORT_BIT_6;
-	}
-	else
-	{
-		m_usPortFInputs |= MASK_PORT_BIT_6;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_12 )
-	{
-		m_usPortFOutputs |= MASK_PORT_BIT_5;
-	}
-	else
-	{
-		m_usPortFInputs |= MASK_PORT_BIT_5;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_13 )
-	{
-		m_usPortFOutputs |= MASK_PORT_BIT_4;
-	}
-	else
-	{
-		m_usPortFInputs |= MASK_PORT_BIT_4;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_14 )
-	{
-		m_usPortFOutputs |= MASK_PORT_BIT_1;
-	}
-	else
-	{
-		m_usPortFInputs |= MASK_PORT_BIT_1;
-	}
-
-	if( uiOutputs & MASK_IO_BIT_15 )
-	{
-		m_usPortFOutputs |= MASK_PORT_BIT_0;
-	}
-	else
-	{
-		m_usPortFInputs |= MASK_PORT_BIT_0;
-	}
-*/
-
 	//----	Port B  ------------------------------------------------
 	//
 	if( g_usPortBInputs )
@@ -526,11 +442,17 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 		PORTB	|=  g_usPortBInputs;	//	Pull-Up on
 	}
 
-	if( g_usPortBOutputs )
-	{
-		DDRB	|=  (g_usPortBOutputs | LED_GREEN | LED_RED);	//	configure as Output
-		PORTB	&= ~(g_usPortBOutputs | LED_GREEN | LED_RED);	//	switch off
-	}
+#if PLATINE_VERSION == 1
+
+	DDRB	|=  (g_usPortBOutputs | LED_GREEN | LED_RED);	//	configure as Output
+	PORTB	&= ~(g_usPortBOutputs | LED_GREEN | LED_RED);	//	switch off
+
+#else
+
+	DDRB	|=  (g_usPortBOutputs | LED_GREEN | LED_RED | RELAIS);	//	configure as Output
+	PORTB	&= ~(g_usPortBOutputs | LED_GREEN | LED_RED | RELAIS);	//	switch off
+
+#endif
 
 	//----	Port C  ------------------------------------------------
 	//
@@ -610,7 +532,7 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 void IO_ControlClass::ReadInputs( void )
 {
 	//----------------------------------------------------------
-	//	get the inputs from the ports
+	//	handle the inputs for each port
 	//
 	if( g_usPortBInputs )
 	{
@@ -693,81 +615,6 @@ bool IO_ControlClass::IsInputSet( uint8_t usIOPin )
 		retval	 = (0 != (*g_arFunctions[ usIOPin ])( usMask ));
 	}
 
-/*
-	if( uiMask & uiInputs )
-	{
-		switch( uiMask )
-		{
-			case MASK_IO_BIT_0:
-				retval = ( 0 != g_clPortD.GetKeyState( MASK_PORT_BIT_6 ) );
-				break;
-				
-			case MASK_IO_BIT_1:
-				retval = ( 0 != g_clPortD.GetKeyState( MASK_PORT_BIT_5 ) );
-				break;
-				
-			case MASK_IO_BIT_2:
-				retval = ( 0 != g_clPortD.GetKeyState( MASK_PORT_BIT_7 ) );
-				break;
-				
-			case MASK_IO_BIT_3:
-				retval = ( 0 != g_clPortB.GetKeyState( MASK_PORT_BIT_7 ) );
-				break;
-				
-			case MASK_IO_BIT_4:
-				retval = ( 0 != g_clPortB.GetKeyState( MASK_PORT_BIT_4 ) );
-				break;
-				
-			case MASK_IO_BIT_5:
-				retval = ( 0 != g_clPortE.GetKeyState( MASK_PORT_BIT_2 ) );
-				break;
-				
-			case MASK_IO_BIT_6:
-				retval = ( 0 != g_clPortC.GetKeyState( MASK_PORT_BIT_7 ) );
-				break;
-				
-			case MASK_IO_BIT_7:
-				retval = ( 0 != g_clPortC.GetKeyState( MASK_PORT_BIT_6 ) );
-				break;
-				
-			case MASK_IO_BIT_8:
-				retval = ( 0 != g_clPortB.GetKeyState( MASK_PORT_BIT_6 ) );
-				break;
-				
-			case MASK_IO_BIT_9:
-				retval = ( 0 != g_clPortB.GetKeyState( MASK_PORT_BIT_5 ) );
-				break;
-				
-			case MASK_IO_BIT_10:
-				retval = ( 0 != g_clPortF.GetKeyState( MASK_PORT_BIT_7 ) );
-				break;
-				
-			case MASK_IO_BIT_11:
-				retval = ( 0 != g_clPortF.GetKeyState( MASK_PORT_BIT_6 ) );
-				break;
-				
-			case MASK_IO_BIT_12:
-				retval = ( 0 != g_clPortF.GetKeyState( MASK_PORT_BIT_5 ) );
-				break;
-				
-			case MASK_IO_BIT_13:
-				retval = ( 0 != g_clPortF.GetKeyState( MASK_PORT_BIT_4 ) );
-				break;
-				
-			case MASK_IO_BIT_14:
-				retval = ( 0 != g_clPortF.GetKeyState( MASK_PORT_BIT_1 ) );
-				break;
-				
-			case MASK_IO_BIT_15:
-				retval = ( 0 != g_clPortF.GetKeyState( MASK_PORT_BIT_0 ) );
-				break;
-				
-			default:
-				break;
-		}
-	}
-*/
-
 	return( retval );
 }
 
@@ -786,191 +633,6 @@ void IO_ControlClass::SetOutput( uint8_t usIOPin, bool bOn )
 	{
 		cbi( *g_arPorts[ usIOPin ], g_arPortPins[ usIOPin ] );
 	}
-
-/*
-		switch( uiMask )
-		{
-			case MASK_IO_BIT_0:
-				if( bOn )
-				{
-					sbi( PORTD, MASK_PORT_BIT_6 );
-				}
-				else
-				{
-					cbi( PORTD, MASK_PORT_BIT_6 );
-				}
-				break;
-
-			case MASK_IO_BIT_1:
-				if( bOn )
-				{
-					sbi( PORTD, MASK_PORT_BIT_5 );
-				}
-				else
-				{
-					cbi( PORTD, MASK_PORT_BIT_5 );
-				}
-				break;
-
-			case MASK_IO_BIT_2:
-				if( bOn )
-				{
-					sbi( PORTD, MASK_PORT_BIT_7 );
-				}
-				else
-				{
-					cbi( PORTD, MASK_PORT_BIT_7 );
-				}
-				break;
-
-			case MASK_IO_BIT_3:
-				if( bOn )
-				{
-					sbi( PORTB, MASK_PORT_BIT_7 );
-				}
-				else
-				{
-					cbi( PORTB, MASK_PORT_BIT_7 );
-				}
-				break;
-
-			case MASK_IO_BIT_4:
-				if( bOn )
-				{
-					sbi( PORTB, MASK_PORT_BIT_4 );
-				}
-				else
-				{
-					cbi( PORTB, MASK_PORT_BIT_4 );
-				}
-				break;
-
-			case MASK_IO_BIT_5:
-				if( bOn )
-				{
-					sbi( PORTE, MASK_PORT_BIT_2 );
-				}
-				else
-				{
-					cbi( PORTE, MASK_PORT_BIT_2 );
-				}
-				break;
-
-			case MASK_IO_BIT_6:
-				if( bOn )
-				{
-					sbi( PORTC, MASK_PORT_BIT_7 );
-				}
-				else
-				{
-					cbi( PORTC, MASK_PORT_BIT_7 );
-				}
-				break;
-
-			case MASK_IO_BIT_7:
-				if( bOn )
-				{
-					sbi( PORTC, MASK_PORT_BIT_6 );
-				}
-				else
-				{
-					cbi( PORTC, MASK_PORT_BIT_6 );
-				}
-				break;
-
-			case MASK_IO_BIT_8:
-				if( bOn )
-				{
-					sbi( PORTB, MASK_PORT_BIT_6 );
-				}
-				else
-				{
-					cbi( PORTB, MASK_PORT_BIT_6 );
-				}
-				break;
-
-			case MASK_IO_BIT_9:
-				if( bOn )
-				{
-					sbi( PORTB, MASK_PORT_BIT_5 );
-				}
-				else
-				{
-					cbi( PORTB, MASK_PORT_BIT_5 );
-				}
-				break;
-
-			case MASK_IO_BIT_10:
-				if( bOn )
-				{
-					sbi( PORTF, MASK_PORT_BIT_7 );
-				}
-				else
-				{
-					cbi( PORTF, MASK_PORT_BIT_7 );
-				}
-				break;
-
-			case MASK_IO_BIT_11:
-				if( bOn )
-				{
-					sbi( PORTF, MASK_PORT_BIT_6 );
-				}
-				else
-				{
-					cbi( PORTF, MASK_PORT_BIT_6 );
-				}
-				break;
-
-			case MASK_IO_BIT_12:
-				if( bOn )
-				{
-					sbi( PORTF, MASK_PORT_BIT_5 );
-				}
-				else
-				{
-					cbi( PORTF, MASK_PORT_BIT_5 );
-				}
-				break;
-
-			case MASK_IO_BIT_13:
-				if( bOn )
-				{
-					sbi( PORTF, MASK_PORT_BIT_4 );
-				}
-				else
-				{
-					cbi( PORTF, MASK_PORT_BIT_4 );
-				}
-				break;
-
-			case MASK_IO_BIT_14:
-				if( bOn )
-				{
-					sbi( PORTF, MASK_PORT_BIT_1 );
-				}
-				else
-				{
-					cbi( PORTF, MASK_PORT_BIT_1 );
-				}
-				break;
-
-			case MASK_IO_BIT_15:
-				if( bOn )
-				{
-					sbi( PORTF, MASK_PORT_BIT_0 );
-				}
-				else
-				{
-					cbi( PORTF, MASK_PORT_BIT_0 );
-				}
-				break;
-
-			default:
-				break;
-		}
-	}
-*/
 }
 
 
