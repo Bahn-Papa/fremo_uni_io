@@ -8,13 +8,20 @@
 
 
 #define VERSION_MAIN	1
-#define	VERSION_MINOR	0
+#define	VERSION_MINOR	1
 #define VERSION_HOTFIX	0
 
 
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: 1.01.00	vom: 18.02.2022
+//#
+//#	Implementation:
+//#		-	add IO pin off delay timer (0 ms up to 65535 ms)
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -90,8 +97,9 @@
 //
 //==========================================================================
 
-uint32_t	g_ulReadInputTimer		= 0L;
-uint32_t	g_ulPrintStatusTimer	= 0L;
+uint32_t	g_ulReadInputTimer					= 0L;
+uint32_t	g_ulPrintStatusTimer				= 0L;
+uint32_t	g_arulOffDelayTimer[ IO_NUMBERS ];
 uint16_t	g_uiLnState;
 uint16_t	g_uiIOState;
 bool		g_bIsProgMode;
@@ -115,6 +123,8 @@ void (*resetFunc)( void ) = 0;
 //**************************************************************************
 //	CheckLnState
 //--------------------------------------------------------------------------
+//	The function will check the changes in the Loconet state and 
+//	will switch the output(s) accordingly
 //
 void CheckLnState( uint16_t uiNewLnState )
 {
@@ -197,15 +207,19 @@ uint16_t GetIOState( void )
 //**************************************************************************
 //	CheckIOState
 //--------------------------------------------------------------------------
+//	The function will check the changes in the IO state and 
+//	will send the appropriate Loconet messages accordingly
 //
 void CheckIOState( uint16_t uiNewIOState )
 {
+	uint32_t	ulOffTimer	= 0L;
+	uint16_t	uiOffDelay	= 0;
+
 	//------------------------------------------------------------------
 	//	get difference between old and actual state ...
 	//
 	uint16_t	uiDiff	= g_uiIOState ^ uiNewIOState;
 	uint16_t	uiMask	= 0x0001;
-	uint8_t		usDir	= 0;
 	uint8_t		idx		= 0;
 
 	//------------------------------------------------------------------
@@ -222,14 +236,40 @@ void CheckIOState( uint16_t uiNewIOState )
 		{
 			if( uiNewIOState & uiMask )
 			{
-				usDir = 1;
+				//------------------------------------------------------
+				//	if the off delay timer is active stop timer
+				//	and stay in 'ON' state
+				//	else send the Loconet message for IO pin is ON
+				//
+				if( g_arulOffDelayTimer[ idx ] )
+				{
+					g_arulOffDelayTimer[ idx ] = 0L;
+				}
+				else
+				{
+					g_clMyLoconet.SendMessage( g_clLncvStorage.GetIOAddress( idx ),
+												uiMask, 1							);
+				}
 			}
 			else
 			{
-				usDir = 0;
+				//------------------------------------------------------
+				//	the IO pin has changed to OFF, so if there is a
+				//	delay time configured start the delay timer
+				//	else send the loconet message for IO pin is OFF
+				//
+				uiOffDelay = g_clLncvStorage.GetIOOffDelay( idx );
+				
+				if( uiOffDelay )
+				{
+					g_arulOffDelayTimer[ idx ] = millis() + uiOffDelay;
+				}
+				else
+				{
+					g_clMyLoconet.SendMessage( g_clLncvStorage.GetIOAddress( idx ),
+												uiMask, 0							);
+				}
 			}
-
-			g_clMyLoconet.SendMessage( g_clLncvStorage.GetIOAddress( idx ), uiMask, usDir );
 
 			//----------------------------------------------------------
 			//	this change was handled,
@@ -243,6 +283,26 @@ void CheckIOState( uint16_t uiNewIOState )
 	}
 
 	g_uiIOState = uiNewIOState;
+	
+	//------------------------------------------------------------------
+	//	now check if any delay timer is lapsed and if so stop the timer
+	//	and send the loconet message for IO pin OFF for that pin
+	//
+	uiMask = 0x0001;
+
+	for( idx = 0 ; idx < IO_NUMBERS ; idx++ )
+	{
+		ulOffTimer = g_arulOffDelayTimer[ idx ];
+
+		if( ulOffTimer && (millis() > ulOffTimer) )
+		{
+			g_arulOffDelayTimer[ idx ] = 0L;
+
+			g_clMyLoconet.SendMessage( g_clLncvStorage.GetIOAddress( idx ),	uiMask, 0 );
+		}
+
+		uiMask <<= 1;
+	}
 }
 
 
@@ -281,7 +341,12 @@ void setup()
 	g_clControl.Init( uiAsOutput );
 	g_clMyLoconet.Init();
 
-	delay( 200 );
+	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
+	{
+		g_arulOffDelayTimer[ idx ] = 0L;
+	}
+
+	delay( 100 );
 
 	//----	Prepare Display  -------------------------------------------
 #ifdef DEBUGGING_PRINTOUT
