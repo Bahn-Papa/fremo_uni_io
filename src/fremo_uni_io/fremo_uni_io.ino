@@ -8,13 +8,35 @@
 
 
 #define VERSION_MAIN	1
-#define	VERSION_MINOR	1
+#define	VERSION_MINOR	2
 #define VERSION_HOTFIX	0
 
 
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: 1.02.00	vom: 19.07.2022
+//#
+//#	Implementation:
+//#		-	new configuration method:
+//#			address, input, output, switch, sensor, green and red
+//#         is configured in one word.
+//#         The word has the following format:
+//#			xxxx m	-	xxxx	address
+//#						m		mode
+//#								0	-	output switch msg RED   (0) active
+//#								1	-	output switch msg GREEN (1) active
+//#								2	-	output sensor LOW  (0) active
+//#								3	-	output sensor HIGH (1) active
+//#								4	-	input  switch msg RED   (0) active
+//#								5	-	input  switch msg GREEN (1) active
+//#								6	-	input  sensor LOW  (0) active
+//#								7	-	input  sensor HIGH (1) active
+//#         output means: lissening on Loconet and set IO pins
+//#         input  means: check state of IO pins and send loconet msg
 //#
 //#-------------------------------------------------------------------------
 //#

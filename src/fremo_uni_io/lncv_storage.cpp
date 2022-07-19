@@ -11,6 +11,28 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	3		vom: 19.07.2022
+//#
+//#	Implementation:
+//#		-	new configuration method:
+//#			address, input, output, switch, sensor, green and red
+//#         is configured in one word.
+//#         The word has the following format:
+//#			xxxx m	-	xxxx	address
+//#						m		mode
+//#								0	-	output switch msg RED   (0) active
+//#								1	-	output switch msg GREEN (1) active
+//#								2	-	output sensor LOW  (0) active
+//#								3	-	output sensor HIGH (1) active
+//#								4	-	input  switch msg RED   (0) active
+//#								5	-	input  switch msg GREEN (1) active
+//#								6	-	input  sensor LOW  (0) active
+//#								7	-	input  sensor HIGH (1) active
+//#         output means: lissening on Loconet and set IO pins
+//#         input  means: check state of IO pins and send loconet msg
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		vom: 18.02.2022
 //#
 //#	Implementation:
@@ -154,6 +176,10 @@ void LncvStorageClass::CheckEEPROM( void )
 //
 void LncvStorageClass::Init( void )
 {
+    uint16_t    uiHelper;
+    uint16_t    uiMask      = 0x0001;
+
+
 #ifdef DEBUGGING_PRINTOUT
 	g_clDebugging.PrintStorageRead();
 #endif
@@ -164,9 +190,9 @@ void LncvStorageClass::Init( void )
 	m_uiArticleNumber	= ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
 	m_uiModuleAddress	= ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
 //	m_uiConfiguration	= ReadLNCV( LNCV_ADR_CONFIGURATION );
-	m_uiOutputs			= ReadLNCV( LNCV_ADR_OUTPUTS );
-	m_uiSensors			= ReadLNCV( LNCV_ADR_SENSORS );
-	m_uiInverse			= ReadLNCV( LNCV_ADR_INVERSE );
+	m_uiOutputs			= 0x0000;
+	m_uiSensors			= 0x0000;
+	m_uiInverse			= 0x0000;
 
 	//--------------------------------------------------------------
 	//	read send delay time
@@ -181,11 +207,46 @@ void LncvStorageClass::Init( void )
 
 	//--------------------------------------------------------------
 	//	read IO addresses and delay times
+    //  for the IO addresses find out if it is
+    //      input or output
+    //      switch or sensor
+    //      react on RED or GREEN
 	//
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
-		m_aruiAddress[  idx ] = ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS    + idx );
 		m_aruiOffDelay[ idx ] = ReadLNCV( LNCV_ADR_FIRST_DELAY_ADDRESS + idx );
+
+        uiHelper                = ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS + idx );
+        m_aruiAddress[ idx ]    = uiHelper / 10;
+        uiHelper               -= (m_aruiAddress[ idx ] * 10);
+
+        if( 4 > uiHelper )
+        {
+            //------------------------------------------------------
+            //  this is an output
+            //
+            m_uiOutputs |= uiMask;
+        }
+        else
+        {
+            uiHelper -= 4;
+        }
+        
+        if( 1 < uiHelper )
+        {
+            //------------------------------------------------------
+            //  this is a sensor
+            //
+            m_uiSensors |= uiMask;
+            uiHelper    -= 2;
+        }
+        
+        if( 0 == uiHelper )
+        {
+            m_uiInverse |= uiMask;
+        }
+        
+        uiMask <<= 1;
 	}
 }
 
