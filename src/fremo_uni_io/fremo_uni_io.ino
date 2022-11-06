@@ -8,13 +8,23 @@
 
 
 #define VERSION_MAIN	1
-#define	VERSION_MINOR	2
+#define	VERSION_MINOR	3
 #define VERSION_HOTFIX	0
 
 
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: 1.03.00	vom: 06.11.2022
+//#
+//#	Implementation:
+//#		-	add one address for multiple I/Os
+//#			up to now there was only one address for one I/O possible
+//#		-	only write to EEPROM if the new value is different
+//#			than the old one
 //#
 //#-------------------------------------------------------------------------
 //#

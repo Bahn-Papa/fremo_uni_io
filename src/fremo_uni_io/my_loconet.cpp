@@ -7,6 +7,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	3		vom: 06.11.2022
+//#
+//#	Implementation:
+//#		-	add one address for multiple I/Os
+//#			up to now there was only one address for one I/O possible
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		vom: 15.02.2022
 //#
 //#	Implementation:
@@ -138,9 +146,8 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 	uint16_t	isInverse	= g_clLncvStorage.GetIsInverse();
 	uint16_t	ioAddress	= 0;
 	uint16_t	mask		= 0x0001;
-	bool		bFound		= false;
 
-	for( uint8_t idx = 0 ; !bFound && (idx < IO_NUMBERS) ; idx++ )
+	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
 		//----------------------------------------------------------
 		//	first check if the pin 'idx' is an output
@@ -170,7 +177,6 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 					//	This is one of our addresses, ergo go on
 					//	with the processing
 					//
-					bFound = true;
 
 #ifdef DEBUGGING_PRINTOUT
 					g_clDebugging.PrintNotifyMsg( adr, dir );
