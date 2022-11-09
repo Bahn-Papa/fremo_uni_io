@@ -9,12 +9,19 @@
 
 #define VERSION_MAIN	1
 #define	VERSION_MINOR	3
-#define VERSION_HOTFIX	0
+#define VERSION_HOTFIX	1
 
 
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: 1.03.01	vom: 09.11.2022
+//#
+//#	Bug Fix:
+//#		-	in function 'WriteLNCV()' Address was not declared
 //#
 //#-------------------------------------------------------------------------
 //#

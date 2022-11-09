@@ -11,6 +11,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		vom: 09.11.2022
+//#
+//#	Bug Fix:
+//#		-	in function 'WriteLNCV()' Address was not declared
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		vom: 06.11.2022
 //#
 //#	Implementation:
@@ -293,7 +300,7 @@ uint16_t LncvStorageClass::ReadLNCV( uint16_t Adresse )
 //**********************************************************************
 //	WriteLNCV
 //
-void LncvStorageClass::WriteLNCV( uint16_t Adresse, uint16_t Value )
+void LncvStorageClass::WriteLNCV( uint16_t Address, uint16_t Value )
 {
 	//--------------------------------------------------------------
 	//	because of uint16 values the address has to be shifted
