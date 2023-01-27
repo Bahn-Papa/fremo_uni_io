@@ -4,17 +4,36 @@
 //#
 //#	This program controls the hardware for universal boards
 //#
+//#-------------------------------------------------------------------------
+//#
+//# board:		Leonardo
+//#	processor:	ATmega32U4, 16 MHz
+//#
 //##########################################################################
 
+#include "compile_options.h"
 
-#define VERSION_MAIN	1
+
+//----------------------------------------------------------------------
+//	The main version is defined by PLATINE_VERSION (compile_options.h)
+//
+//#define VERSION_MAIN	1
 #define	VERSION_MINOR	3
-#define VERSION_HOTFIX	1
+#define VERSION_HOTFIX	2
+
+#define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
 
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: x.03.02	vom: 27.01.2023
+//#
+//#	Implementation:
+//#		-	add version number to EEPROM
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -108,8 +127,6 @@
 //		I N C L U D E S
 //
 //==========================================================================
-
-#include "compile_options.h"
 
 #ifdef DEBUGGING_PRINTOUT
 #include "debugging.h"
@@ -361,12 +378,12 @@ void setup()
 #ifdef DEBUGGING_PRINTOUT
 	g_clDebugging.Init();
 
-	g_clDebugging.PrintTitle( VERSION_MAIN, VERSION_MINOR, VERSION_HOTFIX );
+	g_clDebugging.PrintTitle( PLATINE_VERSION, VERSION_MINOR, VERSION_HOTFIX );
 	g_clDebugging.PrintInfoLine( infoLineInit );
 #endif
 
 	//----	LNCV: Check and Init  --------------------------------------
-	g_clLncvStorage.CheckEEPROM();
+	g_clLncvStorage.CheckEEPROM( VERSION_NUMBER );
 	
 	delay( 500 );
 
@@ -389,7 +406,7 @@ void setup()
 
 	//----	Prepare Display  -------------------------------------------
 #ifdef DEBUGGING_PRINTOUT
-	g_clDebugging.PrintTitle( VERSION_MAIN, VERSION_MINOR, VERSION_HOTFIX );
+	g_clDebugging.PrintTitle( PLATINE_VERSION, VERSION_MINOR, VERSION_HOTFIX );
 	g_clDebugging.PrintInfoLine( infoLineFields );
 #endif
 
@@ -431,6 +448,8 @@ void loop()
 
 	if( millis() > g_ulReadInputTimer )
 	{
+		g_ulReadInputTimer = millis() + READ_INPUTS_TIME;
+
 		g_clControl.ReadInputs();
 	}
 

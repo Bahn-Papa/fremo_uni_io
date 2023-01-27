@@ -11,6 +11,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		vom: 27.01.2023
+//#
+//#	Implementation:
+//#		-	add version number to EEPROM
+//#			change in function
+//#				CheckEEPROM()
+//#		-	move definition into header file
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		vom: 09.11.2022
 //#
 //#	Bug Fix:
@@ -96,27 +106,6 @@ LncvStorageClass	g_clLncvStorage = LncvStorageClass();
 //==========================================================================
 
 //----------------------------------------------------------------------
-//	my artikle number
-#define ARTIKEL_NUMMER	1512
-
-
-//----------------------------------------------------------------------
-//	address definitions for config informations
-//
-#define LNCV_ADR_MODULE_ADDRESS			0
-#define LNCV_ADR_ARTIKEL_NUMMER			1
-#define LNCV_ADR_CONFIGURATION			2
-#define LNCV_ADR_SEND_DELAY				3
-#define LNCV_ADR_OUTPUTS				4
-#define LNCV_ADR_SENSORS				5
-#define LNCV_ADR_INVERSE				6
-#define LNCV_ADR_FIRST_IO_ADDRESS		11
-#define LNCV_ADR_LAST_IO_ADDRESS		26
-#define LNCV_ADR_FIRST_DELAY_ADDRESS	31
-#define LNCV_ADR_LAST_DELAY_ADDRESS		46
-
-
-//----------------------------------------------------------------------
 //	delay times
 //
 #define	MIN_SEND_DELAY_TIME				 5
@@ -143,18 +132,18 @@ LncvStorageClass::LncvStorageClass()
 //	If so, then the EEPROM will be filled with default config infos
 //	and all addresses will be set to zero.
 //
-void LncvStorageClass::CheckEEPROM( void )
+void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 {
-	uint8_t	byte0	= eeprom_read_byte( (uint8_t *)0 );
-	uint8_t	byte1	= eeprom_read_byte( (uint8_t *)1 );
-	uint8_t	idx		= LNCV_ADR_LAST_DELAY_ADDRESS;
-	
+	uint16_t	uiAddress	= ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
+	uint16_t	uiArticle	= ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
+	uint8_t		idx			= LNCV_ADR_LAST_DELAY_ADDRESS;
+
 
 #ifdef DEBUGGING_PRINTOUT
-	g_clDebugging.PrintStorageCheck( byte0, byte1 );
+	g_clDebugging.PrintStorageCheck( uiAddress, uiArticle );
 #endif
 
-	if( (0xFF == byte0) && (0xFF == byte1) )
+	if( (0xFFFF == uiAddress) || (0x0000 == uiAddress) )
 	{
 		//----------------------------------------------------------
 		//	the EEPROM is empty, so write default config info ...
@@ -166,21 +155,26 @@ void LncvStorageClass::CheckEEPROM( void )
 
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS, 0x0001 );				//	Module Adress 0x0001
 		WriteLNCV( LNCV_ADR_ARTIKEL_NUMMER,	ARTIKEL_NUMMER );		//	Artikel-Nummer
+		WriteLNCV( LNCV_ADR_VERSION_NUMBER, uiVersionNumber );		//	Version Number
+
 		WriteLNCV( LNCV_ADR_CONFIGURATION, 0 );						//	no configuration
 		WriteLNCV( LNCV_ADR_SEND_DELAY, DEFAULT_SEND_DELAY_TIME );	//	Send Delay Timer
-		WriteLNCV( LNCV_ADR_OUTPUTS, 0 );							//	all Inputs
-		WriteLNCV( LNCV_ADR_SENSORS, 0 );							//	all Switch messages
-		WriteLNCV( LNCV_ADR_INVERSE, 0 );							//	all not inverse
 		
 		//----------------------------------------------------------
 		//	set all I/O addresses and delay times to '0'
 		//
-		while( LNCV_ADR_INVERSE < idx )
+		while( LNCV_ADR_SEND_DELAY < idx )
 		{
 			WriteLNCV( idx, 0 );
 			idx--;
 		}
 	}
+	else
+	{
+		WriteLNCV( LNCV_ADR_VERSION_NUMBER, uiVersionNumber );
+	}
+
+	delay( 250 );
 }
 
 

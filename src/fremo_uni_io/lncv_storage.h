@@ -14,6 +14,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		vom: 27.01.2023
+//#
+//#	Implementation:
+//#		-	add version number to EEPROM
+//#			change in function
+//#				CheckEEPROM()
+//#		-	move definition into header file
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	3		Date: 18.02.2022
 //#
 //#	Implementation:
@@ -56,6 +66,26 @@
 #define IO_NUMBERS		16
 
 
+//----------------------------------------------------------------------
+//	my artikle number
+#define ARTIKEL_NUMMER	1512
+
+
+//----------------------------------------------------------------------
+//	address definitions for config informations
+//
+#define LNCV_ADR_MODULE_ADDRESS			0
+#define LNCV_ADR_ARTIKEL_NUMMER			1
+#define LNCV_ADR_VERSION_NUMBER			2
+#define LNCV_ADR_CONFIGURATION			3
+#define LNCV_ADR_SEND_DELAY				4
+
+#define LNCV_ADR_FIRST_IO_ADDRESS		11
+#define LNCV_ADR_LAST_IO_ADDRESS		26
+#define LNCV_ADR_FIRST_DELAY_ADDRESS	31
+#define LNCV_ADR_LAST_DELAY_ADDRESS		46
+
+
 ////////////////////////////////////////////////////////////////////////
 //	CLASS:	LncvStorageClass
 //
@@ -69,7 +99,7 @@ class LncvStorageClass
 
 		//----------------------------------------------------------
 		//
-		void		CheckEEPROM( void );
+		void		CheckEEPROM( uint16_t uiVersionNumber );
 		void		Init( void );
 		bool		IsValidLNCVAddress( uint16_t Adresse );
 		uint16_t	ReadLNCV(  uint16_t Adresse );

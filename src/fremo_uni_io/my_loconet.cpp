@@ -457,7 +457,12 @@ int8_t notifyLNCVwrite( uint16_t ArtNr, uint16_t Address, uint16_t Value )
 	{
 		if( g_clLncvStorage.IsValidLNCVAddress( Address ) )
 		{
-			g_clLncvStorage.WriteLNCV( Address, Value );
+			if(		(LNCV_ADR_VERSION_NUMBER != Address)
+				&&	(LNCV_ADR_ARTIKEL_NUMMER != Address) )
+			{
+				g_clLncvStorage.WriteLNCV( Address, Value );
+			}
+
 			retval = LNCV_LACK_OK;
 		}
 		else

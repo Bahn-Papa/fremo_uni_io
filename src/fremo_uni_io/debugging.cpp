@@ -347,10 +347,10 @@ void DebuggingClass::SetLncvMsgPos( void )
 //******************************************************************
 //	PrintStorageCheck
 //
-void DebuggingClass::PrintStorageCheck( uint8_t byte1, uint8_t byte2 )
+void DebuggingClass::PrintStorageCheck( uint16_t uiAddress, uint16_t uiArticle )
 {
-	g_clDisplay.Print( F( "  Check EEPROM:\n" ) );
-	sprintf( g_chDebugString, "  0:0x%02X 1:0x%02X", byte1, byte2 );
+	g_clDisplay.Print( F( "Check EEPROM:\n" ) );
+	sprintf( g_chDebugString, " 0:%05d 1:%05d", uiAddress, uiArticle );
 	g_clDisplay.Print( g_chDebugString );
 }
 
