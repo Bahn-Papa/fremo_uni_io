@@ -13,6 +13,19 @@
 //#
 //#	File version:	6		vom: 27.01.2023
 //#
+//#	Bug Fix:
+//#		-	the interpretation of the config was wrong
+//#			change in function
+//#				Init()
+//#			new definition
+//#				CONFIG_ACTIVE_GREEN
+//#				CONFIG_INPUT
+//#				CONFIG_SENSOR
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	6		vom: 27.01.2023
+//#
 //#	Implementation:
 //#		-	add version number to EEPROM
 //#			change in function
@@ -110,6 +123,13 @@ LncvStorageClass	g_clLncvStorage = LncvStorageClass();
 //
 #define	MIN_SEND_DELAY_TIME				 5
 #define DEFAULT_SEND_DELAY_TIME			10
+
+//----------------------------------------------------------------------
+//	configuration masks
+//
+#define CONFIG_INPUT			0x0004
+#define CONFIG_SENSOR			0x0002
+#define CONFIG_ACTIVE_GREEN		0x0001
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -223,38 +243,31 @@ void LncvStorageClass::Init( void )
 	//
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
-		m_aruiOffDelay[ idx ] = ReadLNCV( LNCV_ADR_FIRST_DELAY_ADDRESS + idx );
+		m_aruiOffDelay[ idx ]	= ReadLNCV( LNCV_ADR_FIRST_DELAY_ADDRESS + idx );
+        uiHelper				= ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS + idx );
+        m_aruiAddress[ idx ]	= uiHelper / 10;
 
-        uiHelper                = ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS + idx );
-        m_aruiAddress[ idx ]    = uiHelper / 10;
-        uiHelper               -= (m_aruiAddress[ idx ] * 10);
-
-        if( 4 > uiHelper )
+        if( 0 == (CONFIG_INPUT & uiHelper) )
         {
             //------------------------------------------------------
             //  this is an output
             //
             m_uiOutputs |= uiMask;
         }
-        else
-        {
-            uiHelper -= 4;
-        }
-        
-        if( 1 < uiHelper )
+
+        if( CONFIG_SENSOR & uiHelper )
         {
             //------------------------------------------------------
             //  this is a sensor
             //
             m_uiSensors |= uiMask;
-            uiHelper    -= 2;
         }
-        
-        if( 0 == uiHelper )
+
+        if( 0 == (CONFIG_ACTIVE_GREEN & uiHelper) )
         {
             m_uiInverse |= uiMask;
         }
-        
+
         uiMask <<= 1;
 	}
 }

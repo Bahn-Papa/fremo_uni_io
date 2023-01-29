@@ -19,7 +19,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	3
-#define VERSION_HOTFIX	3
+#define VERSION_HOTFIX	4
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -27,6 +27,20 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: x.03.04	vom: 29.01.2023
+//#
+//#	Bug Fix:
+//#		-	change in interpreting the configuration
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: x.03.03	vom: 29.01.2023
+//#
+//#	Implementation:
+//#		-	add function to print the configuration
 //#
 //#-------------------------------------------------------------------------
 //#
