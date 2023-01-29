@@ -10,6 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		vom: 29.01.2023
+//#
+//#	Implementation:
+//#		-	add function to print the configuration
+//#			new function
+//#				PrintStorageConfig()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		vom: 14.02.2022
 //#
 //#	Implementation:
@@ -86,6 +95,7 @@ class DebuggingClass
 		void PrintStorageCheck( uint16_t uiAddress, uint16_t uiArticle );
 		void PrintStorageDefault( void );
 		void PrintStorageRead( void );
+		void PrintStorageConfig( uint16_t uiAsOutputs, uint16_t uiAsSensors, uint16_t uiIsInverse );
 
 		void PrintStatus(	uint16_t uiAsOutputs,
 							uint16_t uiOutState,

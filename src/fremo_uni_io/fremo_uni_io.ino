@@ -19,7 +19,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	3
-#define VERSION_HOTFIX	2
+#define VERSION_HOTFIX	3
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -403,6 +403,16 @@ void setup()
 	}
 
 	delay( 100 );
+
+	//----	Show Configuration  ----------------------------------------
+#ifdef DEBUGGING_PRINTOUT
+	g_clDebugging.PrintTitle( PLATINE_VERSION, VERSION_MINOR, VERSION_HOTFIX );
+	g_clDebugging.PrintStorageConfig(	g_clLncvStorage.GetAsOutputs(),
+										g_clLncvStorage.GetAsSensor(),
+										g_clLncvStorage.GetIsInverse()	);
+
+	delay( 2000 );
+#endif
 
 	//----	Prepare Display  -------------------------------------------
 #ifdef DEBUGGING_PRINTOUT

@@ -7,6 +7,26 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	3		vom: 29.01.2023
+//#
+//#	Implementation:
+//#		-	add function to print the configuration
+//#			new function
+//#				PrintStorageConfig()
+//#			the display will show the following lines:
+//#			 S                     1 1 1 1 1 1
+//#			Z  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+//#			0      U n i   V x . x x . y y
+//#			1  O u t p u t :
+//#			2  . O . . . O O O . . . O O O O O
+//#			3  S e n s o r :
+//#			4  S . S S . S S . . S S . . . . .
+//#			5  I n v e r t :
+//#			6  I I . . . I I . . . . . . . . .
+//#			7
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		vom: 18.02.2022
 //#
 //#	Bug fix:
@@ -266,7 +286,7 @@ void DebuggingClass::PrintNotifyMsg( uint16_t address, uint8_t dir )
 			break;
 	}
 
-	sprintf( g_chDebugString, "AR:%5u - ", address );
+	sprintf( g_chDebugString, "AD:%5u - ", address );
 	g_clDisplay.Print( g_chDebugString );
 	g_clDisplay.Print( (dir ? "green" : "red") );
 
@@ -370,6 +390,68 @@ void DebuggingClass::PrintStorageDefault( void )
 void DebuggingClass::PrintStorageRead( void )
 {
 	g_clDisplay.Print( F( "\n  Lese LNCVs\n" ) );
+}
+
+
+//******************************************************************
+//	PrintStorageConfig
+//
+void DebuggingClass::PrintStorageConfig(	uint16_t uiAsOutputs,
+											uint16_t uiAsSensors,
+											uint16_t uiIsInverse )
+{
+	uint16_t	uiMask = 0x8000;
+	uint8_t		idx;
+
+	g_clDisplay.Print( F( "\nOutput:\n" ) );
+
+	for( idx = 0 ; IO_NUMBERS > idx ; idx++ )
+	{
+		if( uiAsOutputs & uiMask )
+		{
+			g_clDisplay.Print( "O" );
+		}
+		else
+		{
+			g_clDisplay.Print( "." );
+		}
+
+		uiMask >>= 1;
+	}
+
+	g_clDisplay.Print( F( "\nSensor:\n" ) );
+	uiMask = 0x8000;
+
+	for( idx = 0 ; IO_NUMBERS > idx ; idx++ )
+	{
+		if( uiAsSensors & uiMask )
+		{
+			g_clDisplay.Print( "S" );
+		}
+		else
+		{
+			g_clDisplay.Print( "." );
+		}
+
+		uiMask >>= 1;
+	}
+
+	g_clDisplay.Print( F( "\nInvert:\n" ) );
+	uiMask = 0x8000;
+
+	for( idx = 0 ; IO_NUMBERS > idx ; idx++ )
+	{
+		if( uiIsInverse & uiMask )
+		{
+			g_clDisplay.Print( "I" );
+		}
+		else
+		{
+			g_clDisplay.Print( "." );
+		}
+
+		uiMask >>= 1;
+	}
 }
 
 
