@@ -11,7 +11,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File version:	6		vom: 27.01.2023
+//#	File version:	8		vom: 27.01.2023
+//#
+//#	Bug Fix:
+//#		-	remove of the error that I put in the last time
+//#			change in function
+//#				Init()
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	7		vom: 27.01.2023
 //#
 //#	Bug Fix:
 //#		-	the interpretation of the config was wrong
@@ -244,8 +253,10 @@ void LncvStorageClass::Init( void )
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
 		m_aruiOffDelay[ idx ]	= ReadLNCV( LNCV_ADR_FIRST_DELAY_ADDRESS + idx );
-        uiHelper				= ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS + idx );
-        m_aruiAddress[ idx ]	= uiHelper / 10;
+
+        uiHelper				 = ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS + idx );
+        m_aruiAddress[ idx ]	 = uiHelper / 10;
+		uiHelper				-= (m_aruiAddress[ idx ] * 10);
 
         if( 0 == (CONFIG_INPUT & uiHelper) )
         {

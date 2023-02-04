@@ -18,8 +18,8 @@
 //	The main version is defined by PLATINE_VERSION (compile_options.h)
 //
 //#define VERSION_MAIN	1
-#define	VERSION_MINOR	3
-#define VERSION_HOTFIX	4
+#define	VERSION_MINOR	4
+#define VERSION_HOTFIX	0
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -27,6 +27,20 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: x.04.00	vom: 04.02.2023
+//#
+//#	Implementation:
+//#		-	change debug text and info for switch/sensor messages
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: x.03.05	vom: 29.01.2023
+//#
+//#	Bug Fix:
+//#		-	now correct interpreting of the configuration
 //#
 //#-------------------------------------------------------------------------
 //#

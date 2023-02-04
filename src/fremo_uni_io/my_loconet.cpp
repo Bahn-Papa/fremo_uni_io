@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		vom: 04.02.2023
+//#
+//#	Implementation:
+//#		-	change debug text and info for switch/sensor messages
+//#			change in function
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	3		vom: 06.11.2022
 //#
 //#	Implementation:
@@ -178,10 +187,6 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 					//	with the processing
 					//
 
-#ifdef DEBUGGING_PRINTOUT
-					g_clDebugging.PrintNotifyMsg( adr, dir );
-#endif
-
 					//----------------------------------------------
 					//	Check if 'dir' should be inverted
 					//
@@ -208,6 +213,11 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 					{
 						m_uiInputStatus &= ~mask;
 					}
+
+#ifdef DEBUGGING_PRINTOUT
+//					g_clDebugging.PrintNotifyMsg( adr, dir );
+					g_clDebugging.PrintNotifyMsg( idx, dir );
+#endif
 				}
 
 			}	//	if( isSensor == (0 != (asSensor & mask)) )

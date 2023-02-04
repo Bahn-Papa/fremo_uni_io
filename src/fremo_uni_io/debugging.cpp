@@ -10,6 +10,15 @@
 //#	File version:	3		vom: 29.01.2023
 //#
 //#	Implementation:
+//#		-	change debug text and info for switch/sensor messages
+//#			change in function
+//#				PrintNotifyMsg()
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	3		vom: 29.01.2023
+//#
+//#	Implementation:
 //#		-	add function to print the configuration
 //#			new function
 //#				PrintStorageConfig()
@@ -286,9 +295,9 @@ void DebuggingClass::PrintNotifyMsg( uint16_t address, uint8_t dir )
 			break;
 	}
 
-	sprintf( g_chDebugString, "AD:%5u - ", address );
+	sprintf( g_chDebugString, "Idx:%3u - ", address );
 	g_clDisplay.Print( g_chDebugString );
-	g_clDisplay.Print( (dir ? "green" : "red") );
+	g_clDisplay.Print( (dir ? "green" : "red  ") );
 
 #ifdef COUNT_MY_MESSAGES
 
