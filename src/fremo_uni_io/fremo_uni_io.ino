@@ -18,7 +18,7 @@
 //	The main version is defined by PLATINE_VERSION (compile_options.h)
 //
 //#define VERSION_MAIN	1
-#define	VERSION_MINOR	4
+#define	VERSION_MINOR	5
 #define VERSION_HOTFIX	0
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
@@ -27,6 +27,13 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version: x.05.00	vom: 05.02.2023
+//#
+//#	Implementation:
+//#		-	add support for board version 4
 //#
 //#-------------------------------------------------------------------------
 //#

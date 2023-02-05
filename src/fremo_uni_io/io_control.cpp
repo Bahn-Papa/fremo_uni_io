@@ -10,7 +10,9 @@
 //#		-	set digital outputs
 //#
 //#	The assignment of the IO pins to the port pins is shown
-//#	in the following table:
+//#	in the following tables:
+//#
+//#	Platine Version 1 und Version 2:
 //#		Head	Pin		IO Pin	Port Pin
 //#		SV 6	6		15			PF 0
 //#		SV 6	5		14			PF 1
@@ -29,6 +31,25 @@
 //#		SV 4	6		 1			PD 5
 //#		SV 4	5		 0			PD 6
 //#
+//#	Platine Version 4:
+//#		Head	Pin		IO Pin	Port Pin
+//#		SV 6	6		15			PF 0
+//#		SV 6	5		14			PF 1
+//#		SV 1	6		13			PB 5
+//#		SV 1	5		12			PB 6
+//#		SV 7	6		11			PF 4
+//#		SV 7	5		10			PF 5
+//#		SV 8	6		 9			PF 6
+//#		SV 8	5		 8			PF 7
+//#		SV 3	6		 7			PC 6
+//#		SV 3	5		 6			PC 7
+//#		SV 5	6		 5			PE 2
+//#		SV 5	5		 4			PB 4
+//#		SV 2	6		 3			PB 7
+//#		SV 2	5		 2			PD 7
+//#		SV 4	6		 1			PD 5
+//#		SV 4	5		 0			PD 6
+//#
 //#	To simplify the program code the mapping is done with the help
 //#	of a few arrays. The trick is to use the universal pin number (IO pin)
 //#	as array index for the different mapping arrays.
@@ -38,6 +59,13 @@
 //#		-	output mask for data direction
 //#		-	read an input
 //#		-	set an output
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	3		vom: 05.02.2023
+//#
+//#	Implementation:
+//#		-	add support for board version 4
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -105,15 +133,15 @@ uint8_t GetKeyStatePortF( uint8_t usMask );
 
 
 //---------------------------------------------------------------------
-//	Port B			V1				V2
-//		PB0		LED GREEN		Relais
-//		PB1		LED RED			LED RED
-//		PB2		N/A				LED GREEN
-//		PB3		N/A				N/A
-//		PB4		Input Output	Input Output
-//		PB5		Input Output	Input Output
-//		PB6		Input Output	Input Output
-//		PB7		Input Output	Input Output
+//	Port B		V1				V2 + V4
+//	PB0			LED GREEN		Relais
+//	PB1			LED RED			LED RED
+//	PB2			N/A				LED GREEN
+//	PB3			N/A				N/A
+//	PB4			I/O (SV5.5)		I/O (SV5.5)
+//	PB5, OC1A	I/O (SV1.6)		I/O (SV1.6)
+//	PB6, OC1B	I/O (SV1.5)		I/O (SV1.5)
+//	PB7, OC1C	I/O (SV2.6)		I/O (SV2.6)
 //
 #if PLATINE_VERSION == 1
 
@@ -130,54 +158,54 @@ uint8_t GetKeyStatePortF( uint8_t usMask );
 
 
 //---------------------------------------------------------------------
-//	Port C
-//		PC0		N/A
-//		PC1		N/A
-//		PC2		N/A
-//		PC3		N/A
-//		PC4		N/A
-//		PC5		N/A
-//		PC6		Input Output
-//		PC7		Input Output
+//	Port C		V1, V2 + V4
+//	PC0			N/A
+//	PC1			N/A
+//	PC2			N/A
+//	PC3			N/A
+//	PC4			N/A
+//	PC5			N/A
+//	PC6, OC3A	I/O (SV3.6)
+//	PC7, OC4A	I/O (SV3.5)
 //
 
 
 //---------------------------------------------------------------------
-//	Port D
-//		PD0		N/A
-//		PD1		N/A
-//		PD2		N/A
-//		PD3		N/A
-//		PD4		N/A
-//		PD5		Input Output
-//		PD6		Input Output
-//		PD7		Input Output
+//	Port D		V1, V2 + V4
+//	PD0			N/A
+//	PD1			N/A
+//	PD2			N/A
+//	PD3			N/A
+//	PD4			N/A
+//	PD5			I/O (SV4.6)
+//	PD6			I/O (SV4.5)
+//	PD7, OC4D	I/O (SV2.5)
 //
 
 
 //---------------------------------------------------------------------
-//	Port E
-//		PE0		N/A
-//		PE1		N/A
-//		PE2		Input Output
-//		PE3		N/A
-//		PE4		N/A
-//		PE5		N/A
-//		PE6		N/A
-//		PE7		N/A
+//	Port E		V1, V2 + V4
+//	PE0			N/A
+//	PE1			N/A
+//	PE2			I/O (SV5.6)
+//	PE3			N/A
+//	PE4			N/A
+//	PE5			N/A
+//	PE6			N/A
+//	PE7			N/A
 //
 
 
 //---------------------------------------------------------------------
-//	Port F
-//		PF0		Input Output
-//		PF1		Input Output
-//		PF2		N/A
-//		PF3		N/A
-//		PF4		Input Output
-//		PF5		Input Output
-//		PF6		Input Output
-//		PF7		Input Output
+//	Port F		V1, V2 + V4
+//	PF0			I/O (SV6.6)
+//	PF1			I/O (SV6.5)
+//	PF2			N/A
+//	PF3			N/A
+//	PF4			I/O (SV7.6)
+//	PF5			I/O (SV7.5)
+//	PF6			I/O (SV8.6)
+//	PF7			I/O (SV8.5)
 //
 
 
@@ -229,106 +257,221 @@ typedef uint8_t (*func_ptr_t)( uint8_t );
 //	this array contains the mapping	universal pin numbering to
 //	pin of port
 //
-uint8_t	g_arPortPins[ IO_NUMBERS ] =
-{
-	PB6, PB5, PB7, PB7, PB4, PB2, PB7, PB6, PB6, PB5, PB7, PB6, PB5, PB4, PB1, PB0
-};
+#if PLATINE_VERSION == 4
+
+	uint8_t	g_arPortPins[ IO_NUMBERS ] =
+	{
+		PB6, PB5, PB7, PB7, PB4, PB2, PB7, PB6, PB7, PB6, PB5, PB4, PB6, PB5, PB1, PB0
+	};
+
+#else
+
+	uint8_t	g_arPortPins[ IO_NUMBERS ] =
+	{
+		PB6, PB5, PB7, PB7, PB4, PB2, PB7, PB6, PB6, PB5, PB7, PB6, PB5, PB4, PB1, PB0
+	};
+
+#endif
 
 //----------------------------------------------------------------------
 //	this array contains the mapping universal pin numbering to
 //	address of variable containing the input mask of a port
 //
-volatile uint8_t * g_arInputMasks[ IO_NUMBERS ] =
-{
-	&g_usPortDInputs,
-	&g_usPortDInputs,
-	&g_usPortDInputs,
-	&g_usPortBInputs,
-	&g_usPortBInputs,
-	&g_usPortEInputs,
-	&g_usPortCInputs,
-	&g_usPortCInputs,
-	&g_usPortBInputs,
-	&g_usPortBInputs,
-	&g_usPortFInputs,
-	&g_usPortFInputs,
-	&g_usPortFInputs,
-	&g_usPortFInputs,
-	&g_usPortFInputs,
-	&g_usPortFInputs
-};
+#if PLATINE_VERSION == 4
+
+	volatile uint8_t * g_arInputMasks[ IO_NUMBERS ] =
+	{
+		&g_usPortDInputs,
+		&g_usPortDInputs,
+		&g_usPortDInputs,
+		&g_usPortBInputs,
+		&g_usPortBInputs,
+		&g_usPortEInputs,
+		&g_usPortCInputs,
+		&g_usPortCInputs,
+		&g_usPortFInputs,
+		&g_usPortFInputs,
+		&g_usPortFInputs,
+		&g_usPortFInputs,
+		&g_usPortBInputs,
+		&g_usPortBInputs,
+		&g_usPortFInputs,
+		&g_usPortFInputs
+	};
+
+#else
+
+	volatile uint8_t * g_arInputMasks[ IO_NUMBERS ] =
+	{
+		&g_usPortDInputs,
+		&g_usPortDInputs,
+		&g_usPortDInputs,
+		&g_usPortBInputs,
+		&g_usPortBInputs,
+		&g_usPortEInputs,
+		&g_usPortCInputs,
+		&g_usPortCInputs,
+		&g_usPortBInputs,
+		&g_usPortBInputs,
+		&g_usPortFInputs,
+		&g_usPortFInputs,
+		&g_usPortFInputs,
+		&g_usPortFInputs,
+		&g_usPortFInputs,
+		&g_usPortFInputs
+	};
+
+#endif
 
 //----------------------------------------------------------------------
 //	this array contains the mapping universal pin numbering to
 //	address of variable containing the output mask of a port
 //
-volatile uint8_t * g_arOutputMasks[ IO_NUMBERS ] =
-{
-	&g_usPortDOutputs,
-	&g_usPortDOutputs,
-	&g_usPortDOutputs,
-	&g_usPortBOutputs,
-	&g_usPortBOutputs,
-	&g_usPortEOutputs,
-	&g_usPortCOutputs,
-	&g_usPortCOutputs,
-	&g_usPortBOutputs,
-	&g_usPortBOutputs,
-	&g_usPortFOutputs,
-	&g_usPortFOutputs,
-	&g_usPortFOutputs,
-	&g_usPortFOutputs,
-	&g_usPortFOutputs,
-	&g_usPortFOutputs
-};
+#if PLATINE_VERSION == 4
+
+	volatile uint8_t * g_arOutputMasks[ IO_NUMBERS ] =
+	{
+		&g_usPortDOutputs,
+		&g_usPortDOutputs,
+		&g_usPortDOutputs,
+		&g_usPortBOutputs,
+		&g_usPortBOutputs,
+		&g_usPortEOutputs,
+		&g_usPortCOutputs,
+		&g_usPortCOutputs,
+		&g_usPortFOutputs,
+		&g_usPortFOutputs,
+		&g_usPortFOutputs,
+		&g_usPortFOutputs,
+		&g_usPortBOutputs,
+		&g_usPortBOutputs,
+		&g_usPortFOutputs,
+		&g_usPortFOutputs
+	};
+
+#else
+
+	volatile uint8_t * g_arOutputMasks[ IO_NUMBERS ] =
+	{
+		&g_usPortDOutputs,
+		&g_usPortDOutputs,
+		&g_usPortDOutputs,
+		&g_usPortBOutputs,
+		&g_usPortBOutputs,
+		&g_usPortEOutputs,
+		&g_usPortCOutputs,
+		&g_usPortCOutputs,
+		&g_usPortBOutputs,
+		&g_usPortBOutputs,
+		&g_usPortFOutputs,
+		&g_usPortFOutputs,
+		&g_usPortFOutputs,
+		&g_usPortFOutputs,
+		&g_usPortFOutputs,
+		&g_usPortFOutputs
+	};
+
+#endif
 
 //----------------------------------------------------------------------
 //	this array contains the mapping universal pin numbering to
 //	address of function for reading the inputs of a port
 //
-func_ptr_t	g_arFunctions[ IO_NUMBERS ] =
-{
-	GetKeyStatePortD,
-	GetKeyStatePortD,
-	GetKeyStatePortD,
-	GetKeyStatePortB,
-	GetKeyStatePortB,
-	GetKeyStatePortE,
-	GetKeyStatePortC,
-	GetKeyStatePortC,
-	GetKeyStatePortB,
-	GetKeyStatePortB,
-	GetKeyStatePortF,
-	GetKeyStatePortF,
-	GetKeyStatePortF,
-	GetKeyStatePortF,
-	GetKeyStatePortF,
-	GetKeyStatePortF
-};
+#if PLATINE_VERSION == 4
+
+	func_ptr_t	g_arFunctions[ IO_NUMBERS ] =
+	{
+		GetKeyStatePortD,
+		GetKeyStatePortD,
+		GetKeyStatePortD,
+		GetKeyStatePortB,
+		GetKeyStatePortB,
+		GetKeyStatePortE,
+		GetKeyStatePortC,
+		GetKeyStatePortC,
+		GetKeyStatePortF,
+		GetKeyStatePortF,
+		GetKeyStatePortF,
+		GetKeyStatePortF,
+		GetKeyStatePortB,
+		GetKeyStatePortB,
+		GetKeyStatePortF,
+		GetKeyStatePortF
+	};
+
+#else
+
+	func_ptr_t	g_arFunctions[ IO_NUMBERS ] =
+	{
+		GetKeyStatePortD,
+		GetKeyStatePortD,
+		GetKeyStatePortD,
+		GetKeyStatePortB,
+		GetKeyStatePortB,
+		GetKeyStatePortE,
+		GetKeyStatePortC,
+		GetKeyStatePortC,
+		GetKeyStatePortB,
+		GetKeyStatePortB,
+		GetKeyStatePortF,
+		GetKeyStatePortF,
+		GetKeyStatePortF,
+		GetKeyStatePortF,
+		GetKeyStatePortF,
+		GetKeyStatePortF
+	};
+
+#endif
 
 //----------------------------------------------------------------------
 //	this array contains the mapping universal pin numbering to
 //	address of port to set an output
 //
-volatile uint8_t * g_arPorts[ IO_NUMBERS ] =
-{
-	&PORTD,
-	&PORTD,
-	&PORTD,
-	&PORTB,
-	&PORTB,
-	&PORTE,
-	&PORTC,
-	&PORTC,
-	&PORTB,
-	&PORTB,
-	&PORTF,
-	&PORTF,
-	&PORTF,
-	&PORTF,
-	&PORTF,
-	&PORTF
-};
+#if PLATINE_VERSION == 4
+
+	volatile uint8_t * g_arPorts[ IO_NUMBERS ] =
+	{
+		&PORTD,
+		&PORTD,
+		&PORTD,
+		&PORTB,
+		&PORTB,
+		&PORTE,
+		&PORTC,
+		&PORTC,
+		&PORTF,
+		&PORTF,
+		&PORTF,
+		&PORTF,
+		&PORTB,
+		&PORTB,
+		&PORTF,
+		&PORTF
+	};
+
+#else
+
+	volatile uint8_t * g_arPorts[ IO_NUMBERS ] =
+	{
+		&PORTD,
+		&PORTD,
+		&PORTD,
+		&PORTB,
+		&PORTB,
+		&PORTE,
+		&PORTC,
+		&PORTC,
+		&PORTB,
+		&PORTB,
+		&PORTF,
+		&PORTF,
+		&PORTF,
+		&PORTF,
+		&PORTF,
+		&PORTF
+	};
+
+#endif
 
 
 //==========================================================================
