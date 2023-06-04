@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		from: 04.06.2023
+//#
+//#	Bug Fix:
+//#		-	do not go into prog mode when a discover msg was detected
+//#			change in function
+//#				notifyLNCVdiscover()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		vom: 04.02.2023
 //#
 //#	Implementation:
@@ -359,7 +368,7 @@ int8_t notifyLNCVdiscover( uint16_t &ArtNr, uint16_t &ModuleAddress )
 	ArtNr			= g_clLncvStorage.GetArticleNumber();
 	ModuleAddress	= g_clLncvStorage.GetModuleAddress();
 
-	g_clMyLoconet.SetProgMode( true );
+//	g_clMyLoconet.SetProgMode( true );
 
 #ifdef DEBUGGING_PRINTOUT
 	g_clDebugging.PrintLncvDiscoverStart( false, ArtNr, ModuleAddress  );

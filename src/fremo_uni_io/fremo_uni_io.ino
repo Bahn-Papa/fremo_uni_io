@@ -19,7 +19,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	5
-#define VERSION_HOTFIX	0
+#define VERSION_HOTFIX	1
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -27,6 +27,13 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.05.01		from: 04.06.2023
+//#
+//#	Bug Fix:
+//#		-	do not go into prog mode when a discover msg was detected
 //#
 //#-------------------------------------------------------------------------
 //#
