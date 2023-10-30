@@ -14,6 +14,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		vom: 26.10.2023
+//#
+//#	Implementation:
+//#		-	add switch report handling
+//#			new variable
+//#				m_uiSwitchReport
+//#			new function
+//#				GetAsReport()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		vom: 27.01.2023
 //#
 //#	Implementation:
@@ -77,7 +88,7 @@
 #define LNCV_ADR_MODULE_ADDRESS			0
 #define LNCV_ADR_ARTIKEL_NUMMER			1
 #define LNCV_ADR_VERSION_NUMBER			2
-#define LNCV_ADR_CONFIGURATION			3
+#define LNCV_ADR_SWITCH_AS_REPORT		3
 #define LNCV_ADR_SEND_DELAY				4
 
 #define LNCV_ADR_FIRST_IO_ADDRESS		11
@@ -117,6 +128,13 @@ class LncvStorageClass
 		inline uint16_t GetModuleAddress( void )
 		{
 			return( m_uiModuleAddress );
+		};
+
+		//----------------------------------------------------------
+		//
+		inline uint16_t	GetAsReport( void )
+		{
+			return( m_uiSwitchReport );
 		};
 
 		//----------------------------------------------------------
@@ -185,7 +203,7 @@ class LncvStorageClass
 	private:
 		uint16_t	m_uiArticleNumber;
 		uint16_t	m_uiModuleAddress;
-//		uint16_t	m_uiConfiguration;
+		uint16_t	m_uiSwitchReport;
 		uint16_t	m_uiSendDelay;
 		uint16_t	m_uiOutputs;
 		uint16_t	m_uiSensors;

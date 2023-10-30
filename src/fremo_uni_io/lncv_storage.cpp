@@ -11,6 +11,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	9		vom: 26.10.2023
+//#
+//#	Implementation:
+//#		-	add switch report handling
+//#			new variable
+//#				m_uiSwitchReport
+//#			change in function
+//#				Init()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	8		vom: 27.01.2023
 //#
 //#	Bug Fix:
@@ -227,7 +238,7 @@ void LncvStorageClass::Init( void )
 	//
 	m_uiArticleNumber	= ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
 	m_uiModuleAddress	= ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
-//	m_uiConfiguration	= ReadLNCV( LNCV_ADR_CONFIGURATION );
+	m_uiSwitchReport	= ReadLNCV( LNCV_ADR_SWITCH_AS_REPORT );
 	m_uiOutputs			= 0x0000;
 	m_uiSensors			= 0x0000;
 	m_uiInverse			= 0x0000;
@@ -258,7 +269,7 @@ void LncvStorageClass::Init( void )
         m_aruiAddress[ idx ]	 = uiHelper / 10;
 		uiHelper				-= (m_aruiAddress[ idx ] * 10);
 
-        if( 0 == (CONFIG_INPUT & uiHelper) )
+        if( 0 == (uiHelper & CONFIG_INPUT) )
         {
             //------------------------------------------------------
             //  this is an output
@@ -266,7 +277,7 @@ void LncvStorageClass::Init( void )
             m_uiOutputs |= uiMask;
         }
 
-        if( CONFIG_SENSOR & uiHelper )
+        if( uiHelper & CONFIG_SENSOR )
         {
             //------------------------------------------------------
             //  this is a sensor
@@ -274,7 +285,7 @@ void LncvStorageClass::Init( void )
             m_uiSensors |= uiMask;
         }
 
-        if( 0 == (CONFIG_ACTIVE_GREEN & uiHelper) )
+        if( 0 == (uiHelper & CONFIG_ACTIVE_GREEN) )
         {
             m_uiInverse |= uiMask;
         }

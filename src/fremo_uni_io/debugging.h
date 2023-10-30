@@ -10,6 +10,23 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		vom: 30.10.2023
+//#
+//#	Implementation:
+//#		-	switch to new OLED library, SimpleOled
+//#		-	do not send any command to display if it is not present
+//#			new variable
+//#				m_bDisplayPresent
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File version:	3		vom: 26.10.2023
+//#
+//#	Implementation:
+//#		-	move notify types into own file
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		vom: 29.01.2023
 //#
 //#	Implementation:
@@ -33,6 +50,8 @@
 //
 //==========================================================================
 
+#include "notify_types.h"
+
 
 //==========================================================================
 //
@@ -47,16 +66,6 @@ typedef enum info_lines
 	infoLineLedTest
 
 }	info_lines_t;
-
-
-typedef enum notify_type
-{
-	NT_Sensor = 0,
-	NT_Request,
-	NT_Report,
-	NT_State
-
-}	notify_type_t;
 
 
 //==========================================================================
@@ -105,6 +114,7 @@ class DebuggingClass
 		void PrintCounter( void );
 
 	private:
+		bool			m_bDisplayPresent;
 		notify_type_t	m_NotifyType;
 		uint32_t		m_counter;
 

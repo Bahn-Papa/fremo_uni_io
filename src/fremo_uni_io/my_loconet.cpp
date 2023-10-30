@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		vom: 26.10.2023
+//#
+//#	Implementation:
+//#		-	change in message handling
+//#			change in function
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		from: 04.06.2023
 //#
 //#	Bug Fix:
@@ -82,6 +91,16 @@
 
 #define LOCONET_TX_PIN			7
 
+//----------------------------------------------------------------------
+//	configuration masks
+//
+#define SWITCH_RED				0
+#define SWITCH_THROWN			SWITCH_RED
+#define SWITCH_ABZWEIGEN		SWITCH_RED
+#define SWITCH_GREEN			1
+#define SWITCH_CLOSED			SWITCH_GREEN
+#define SWITCH_GERADE			SWITCH_GREEN
+
 
 //==========================================================================
 //
@@ -154,7 +173,7 @@ void MyLoconetClass::CheckForMessage( void )
 //	If so, the corresponding bit of the 'InputState' will be set
 //	according to the info in the message.
 //
-void MyLoconetClass::LoconetReceived(	bool isSensor,
+void MyLoconetClass::LoconetReceived(	notify_type_t type,
 										uint16_t adr,
 										uint8_t dir,
 										uint8_t			)
@@ -162,6 +181,7 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 	uint16_t	asOutputs	= g_clLncvStorage.GetAsOutputs();
 	uint16_t	asSensor	= g_clLncvStorage.GetAsSensor();
 	uint16_t	isInverse	= g_clLncvStorage.GetIsInverse();
+	uint16_t	asReport	= g_clLncvStorage.GetAsReport();
 	uint16_t	ioAddress	= 0;
 	uint16_t	mask		= 0x0001;
 
@@ -177,15 +197,15 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 			//	second check if we are searching for an address in
 			//	a sensor message or in a switch message.
 			//
-			//	isSensor == false	we are looking for switch messages
-			//	isSensor == true	we are looking for sensor messages
+			//	type != NT_Sensor	we are looking for switch messages
+			//	type == NT_Sensor	we are looking for sensor messages
 			//
 			//	'asSensor' will hold the info if the message at the
 			//	actual bit position (mask) is expected to be
 			//	a sensor message or a switch message.
 			//	(bit set => sensor message)
 			//
-			if( isSensor == (0 != (asSensor & mask)) )
+			if( (NT_Sensor == type) == (0 != (asSensor & mask)) )
 			{
 				ioAddress = g_clLncvStorage.GetIOAddress( idx );
 
@@ -195,6 +215,14 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 					//	This is one of our addresses, ergo go on
 					//	with the processing
 					//
+
+
+///////////////////////////////////////////////////////////
+//
+//		Hier muss noch die Report Verarbeitung hin
+//
+///////////////////////////////////////////////////////////
+
 
 					//----------------------------------------------
 					//	Check if 'dir' should be inverted
@@ -229,7 +257,7 @@ void MyLoconetClass::LoconetReceived(	bool isSensor,
 #endif
 				}
 
-			}	//	if( isSensor == (0 != (asSensor & mask)) )
+			}	//	if( (NT_Sensor == type) == (0 != (asSensor & mask)) )
 
 		}	//	if( mask & asInputs )
 
@@ -317,36 +345,37 @@ void notifySensor( uint16_t Address, uint8_t State )
 	g_clDebugging.PrintNotifyType( NT_Sensor );
 #endif
 
-	g_clMyLoconet.LoconetReceived( true, Address, State, 0 );
+	g_clMyLoconet.LoconetReceived( NT_Sensor, Address, State, 0 );
 }
 
 
 //**********************************************************************
 //
-void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction )
+void notifySwitchRequest( uint16_t Address, uint8_t usClosed, uint8_t usThrown )
 {
 #ifdef DEBUGGING_PRINTOUT
 	g_clDebugging.PrintNotifyType( NT_Request );
 #endif
 
-	g_clMyLoconet.LoconetReceived( false, Address, Direction, Output );
+	g_clMyLoconet.LoconetReceived( NT_Request, Address, usThrown, usClosed );
 }
 
 
 //**********************************************************************
 //
-void notifySwitchReport( uint16_t Address, uint8_t Output, uint8_t Direction )
+void notifySwitchOutputsReport( uint16_t Address, uint8_t Output, uint8_t Direction )
 {
 #ifdef DEBUGGING_PRINTOUT
 	g_clDebugging.PrintNotifyType( NT_Report );
 #endif
 
-	g_clMyLoconet.LoconetReceived( false, Address, Direction, Output );
+	g_clMyLoconet.LoconetReceived( NT_Report, Address, Direction, Output );
 }
 
 
 //**********************************************************************
 //
+/*
 void notifySwitchState( uint16_t Address, uint8_t Output, uint8_t Direction )
 {
 #ifdef DEBUGGING_PRINTOUT
@@ -355,6 +384,7 @@ void notifySwitchState( uint16_t Address, uint8_t Output, uint8_t Direction )
 
 	g_clMyLoconet.LoconetReceived( false, Address, Direction, Output );
 }
+*/
 
 
 //**********************************************************************

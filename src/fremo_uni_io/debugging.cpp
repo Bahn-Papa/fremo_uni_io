@@ -7,6 +7,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		vom: 30.10.2023
+//#
+//#	Implementation:
+//#		-	switch to new OLED library, SimpleOled
+//#		-	do not send any command to display if it is not present
+//#			new variable
+//#				m_bDisplayPresent
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	3		vom: 29.01.2023
 //#
 //#	Implementation:
@@ -79,7 +89,7 @@
 
 #include <avr/pgmspace.h>
 #include <Wire.h>
-#include <simple_oled_sh1106.h>
+#include <SimpleOled.h>
 
 #include "debugging.h"
 
@@ -166,7 +176,8 @@ void PrintMsgCount( void )
 //
 DebuggingClass::DebuggingClass()
 {
-	m_counter = 0;
+	m_bDisplayPresent	= false;
+	m_counter			= 0;
 }
 
 
@@ -176,8 +187,22 @@ DebuggingClass::DebuggingClass()
 //
 void DebuggingClass::Init( void )
 {
-	g_clDisplay.Init();
-	g_clDisplay.Flip( true );
+
+#ifdef OLED_CHIP_TYPE_SSD1306
+
+	if( 0 == g_clDisplay.Init( CHIP_TYPE_SSD1306 ) )
+
+#else
+
+	if( 0 == g_clDisplay.Init() )
+
+#endif
+
+	{
+		m_bDisplayPresent	= true;
+
+		g_clDisplay.Flip( true );
+	}
 }
 
 
@@ -189,12 +214,15 @@ void DebuggingClass::PrintTitle(	uint8_t versionMain,
 									uint8_t versionMinor,
 									uint8_t versionHotFix )
 {
-	g_clDisplay.Clear();
-	g_clDisplay.SetInverseFont( true );
-	sprintf(	g_chDebugString, "  Uni V%u.%02u.%02u  ",
-				versionMain, versionMinor, versionHotFix );
-	g_clDisplay.Print( g_chDebugString );
-	g_clDisplay.SetInverseFont( false );
+	if( m_bDisplayPresent )
+	{
+		g_clDisplay.Clear();
+		g_clDisplay.SetInverseFont( true );
+		sprintf(	g_chDebugString, "  Uni V%u.%02u.%02u  ",
+					versionMain, versionMinor, versionHotFix );
+		g_clDisplay.Print( g_chDebugString );
+		g_clDisplay.SetInverseFont( false );
+	}
 }
 
 
@@ -204,23 +232,26 @@ void DebuggingClass::PrintTitle(	uint8_t versionMain,
 //
 void DebuggingClass::PrintInfoLine( info_lines_t number )
 {
-	switch( number )
+	if( m_bDisplayPresent )
 	{
-		case infoLineFields:
-			g_clDisplay.Print( F( "\nInput State:\n" ) );
-			g_clDisplay.Print( F( "\nOutput State:"  ) );
-			break;
+		switch( number )
+		{
+			case infoLineFields:
+				g_clDisplay.Print( F( "\nInput State:\n" ) );
+				g_clDisplay.Print( F( "\nOutput State:"  ) );
+				break;
 
-		case infoLineInit:
-			g_clDisplay.Print( F( "\n  Init:\n" ) );
-			break;
+			case infoLineInit:
+				g_clDisplay.Print( F( "\n  Init:\n" ) );
+				break;
 
-		case infoLineLedTest:
-			g_clDisplay.Print( F( "  LED Test\n" ) );
-			break;
+			case infoLineLedTest:
+				g_clDisplay.Print( F( "  LED Test\n" ) );
+				break;
 
-		default:
-			break;
+			default:
+				break;
+		}
 	}
 }
 
@@ -231,8 +262,11 @@ void DebuggingClass::PrintInfoLine( info_lines_t number )
 //
 void DebuggingClass::PrintText( char *text )
 {
-	g_clDisplay.ClearLine( MESSAGE_LINE );
-	g_clDisplay.Print( text );
+	if( m_bDisplayPresent )
+	{
+		g_clDisplay.ClearLine( MESSAGE_LINE );
+		g_clDisplay.Print( text );
+	}
 }
 
 
@@ -242,11 +276,14 @@ void DebuggingClass::PrintText( char *text )
 //
 void DebuggingClass::PrintCounter( void )
 {
-	m_counter++;
-	
-	g_clDisplay.ClearLine( MESSAGE_LINE );
-	sprintf( g_chDebugString, "Counter: %lu", m_counter );
-	g_clDisplay.Print( g_chDebugString );
+	if( m_bDisplayPresent )
+	{
+		m_counter++;
+		
+		g_clDisplay.ClearLine( MESSAGE_LINE );
+		sprintf( g_chDebugString, "Counter: %lu", m_counter );
+		g_clDisplay.Print( g_chDebugString );
+	}
 }
 
 
@@ -256,15 +293,19 @@ void DebuggingClass::PrintCounter( void )
 //
 void DebuggingClass::PrintNotifyType( notify_type_t type )
 {
-	m_NotifyType = type;
+	if( m_bDisplayPresent )
+	{
+		m_NotifyType = type;
 
 #ifdef COUNT_ALL_MESSAGES
 
-	g_ulSwitchMsgCounter++;
+		g_ulSwitchMsgCounter++;
 
-	PrintMsgCount();
+		PrintMsgCount();
 
 #endif
+
+	}
 }
 
 
@@ -274,38 +315,42 @@ void DebuggingClass::PrintNotifyType( notify_type_t type )
 //
 void DebuggingClass::PrintNotifyMsg( uint16_t address, uint8_t dir )
 {
-	SetLncvMsgPos();
-
-	switch( m_NotifyType )
+	if( m_bDisplayPresent )
 	{
-		case NT_Sensor:
-			g_clDisplay.Print( F( "E:Sensor\n" ) );
-			break;
+		SetLncvMsgPos();
 
-		case NT_Request:
-			g_clDisplay.Print( F( "E:Switch Reqst\n" ) );
-			break;
+		switch( m_NotifyType )
+		{
+			case NT_Sensor:
+				g_clDisplay.Print( F( "E:Sensor\n" ) );
+				break;
 
-		case NT_Report:
-			g_clDisplay.Print( F( "E:Switch Report\n" ) );
-			break;
+			case NT_Request:
+				g_clDisplay.Print( F( "E:Switch Reqst\n" ) );
+				break;
 
-		case NT_State:
-			g_clDisplay.Print( F( "E:Switch State\n" ) );
-			break;
-	}
+			case NT_Report:
+				g_clDisplay.Print( F( "E:Switch Report\n" ) );
+				break;
 
-	sprintf( g_chDebugString, "Idx:%3u - ", address );
-	g_clDisplay.Print( g_chDebugString );
-	g_clDisplay.Print( (dir ? "green" : "red  ") );
+			case NT_State:
+				g_clDisplay.Print( F( "E:Switch State\n" ) );
+				break;
+		}
+
+		sprintf( g_chDebugString, "Idx:%3u - ", address );
+		g_clDisplay.Print( g_chDebugString );
+		g_clDisplay.Print( (dir ? "green" : "red  ") );
 
 #ifdef COUNT_MY_MESSAGES
 
-	g_ulSwitchMsgCounter++;
+		g_ulSwitchMsgCounter++;
 
-	PrintMsgCount();
+		PrintMsgCount();
 
 #endif
+
+	}
 }
 
 
@@ -314,19 +359,22 @@ void DebuggingClass::PrintNotifyMsg( uint16_t address, uint8_t dir )
 //
 void DebuggingClass::PrintLncvDiscoverStart( bool start, uint16_t artikel, uint16_t address )
 {
-	SetLncvMsgPos();
+	if( m_bDisplayPresent )
+	{
+		SetLncvMsgPos();
 
-	if( start )
-	{
-		g_clDisplay.Print( F( "LNCV Prog Start\n" ) );
+		if( start )
+		{
+			g_clDisplay.Print( F( "LNCV Prog Start\n" ) );
+		}
+		else
+		{
+			g_clDisplay.Print( F( "LNCV Discover\n" ) );
+		}
+		
+		sprintf( g_chDebugString, "AR%5u AD%5u", artikel, address );
+		g_clDisplay.Print( g_chDebugString );
 	}
-	else
-	{
-		g_clDisplay.Print( F( "LNCV Discover\n" ) );
-	}
-	
-	sprintf( g_chDebugString, "AR%5u AD%5u", artikel, address );
-	g_clDisplay.Print( g_chDebugString );
 }
 
 
@@ -335,10 +383,13 @@ void DebuggingClass::PrintLncvDiscoverStart( bool start, uint16_t artikel, uint1
 //
 void DebuggingClass::PrintLncvStop()
 {
-	SetLncvMsgPos();
-	g_clDisplay.Print( F( "LNCV Prog Stop" ) );
-//	sprintf( g_chDebugString, "AR%5u AD%5u", ArtNr, ModuleAddress );
-//	g_clDisplay.Print( g_chDebugString );
+	if( m_bDisplayPresent )
+	{
+		SetLncvMsgPos();
+		g_clDisplay.Print( F( "LNCV Prog Stop" ) );
+//		sprintf( g_chDebugString, "AR%5u AD%5u", ArtNr, ModuleAddress );
+//		g_clDisplay.Print( g_chDebugString );
+	}
 }
 
 
@@ -347,19 +398,22 @@ void DebuggingClass::PrintLncvStop()
 //
 void DebuggingClass::PrintLncvReadWrite( bool doRead, uint16_t address, uint16_t value )
 {
-	SetLncvMsgPos();
-
-	if( doRead )
+	if( m_bDisplayPresent )
 	{
-		g_clDisplay.Print( F( "LNCV Read\n" ) );
-	}
-	else
-	{
-		g_clDisplay.Print( F( "LNCV Write\n" ) );
-	}
+		SetLncvMsgPos();
 
-	sprintf( g_chDebugString, "AD%5u VA%5u", address, value );
-	g_clDisplay.Print( g_chDebugString );
+		if( doRead )
+		{
+			g_clDisplay.Print( F( "LNCV Read\n" ) );
+		}
+		else
+		{
+			g_clDisplay.Print( F( "LNCV Write\n" ) );
+		}
+
+		sprintf( g_chDebugString, "AD%5u VA%5u", address, value );
+		g_clDisplay.Print( g_chDebugString );
+	}
 }
 
 
@@ -368,8 +422,11 @@ void DebuggingClass::PrintLncvReadWrite( bool doRead, uint16_t address, uint16_t
 //
 void DebuggingClass::SetLncvMsgPos( void )
 {
-	g_clDisplay.ClearLine( LOCONET_MSG_LINE + 1 );
-	g_clDisplay.ClearLine( LOCONET_MSG_LINE );
+	if( m_bDisplayPresent )
+	{
+		g_clDisplay.ClearLine( LOCONET_MSG_LINE + 1 );
+		g_clDisplay.ClearLine( LOCONET_MSG_LINE );
+	}
 }
 
 
@@ -378,9 +435,12 @@ void DebuggingClass::SetLncvMsgPos( void )
 //
 void DebuggingClass::PrintStorageCheck( uint16_t uiAddress, uint16_t uiArticle )
 {
-	g_clDisplay.Print( F( "Check EEPROM:\n" ) );
-	sprintf( g_chDebugString, " 0:%05d 1:%05d", uiAddress, uiArticle );
-	g_clDisplay.Print( g_chDebugString );
+	if( m_bDisplayPresent )
+	{
+		g_clDisplay.Print( F( "Check EEPROM:\n" ) );
+		sprintf( g_chDebugString, " 0:%05d 1:%05d", uiAddress, uiArticle );
+		g_clDisplay.Print( g_chDebugString );
+	}
 }
 
 
@@ -389,7 +449,10 @@ void DebuggingClass::PrintStorageCheck( uint16_t uiAddress, uint16_t uiArticle )
 //
 void DebuggingClass::PrintStorageDefault( void )
 {
-	g_clDisplay.Print( F( "\nSet default Adr" ) );
+	if( m_bDisplayPresent )
+	{
+		g_clDisplay.Print( F( "\nSet default Adr" ) );
+	}
 }
 
 
@@ -398,7 +461,10 @@ void DebuggingClass::PrintStorageDefault( void )
 //
 void DebuggingClass::PrintStorageRead( void )
 {
-	g_clDisplay.Print( F( "\n  Lese LNCVs\n" ) );
+	if( m_bDisplayPresent )
+	{
+		g_clDisplay.Print( F( "\n  Lese LNCVs\n" ) );
+	}
 }
 
 
@@ -412,54 +478,57 @@ void DebuggingClass::PrintStorageConfig(	uint16_t uiAsOutputs,
 	uint16_t	uiMask = 0x8000;
 	uint8_t		idx;
 
-	g_clDisplay.Print( F( "\nOutput:\n" ) );
-
-	for( idx = 0 ; IO_NUMBERS > idx ; idx++ )
+	if( m_bDisplayPresent )
 	{
-		if( uiAsOutputs & uiMask )
-		{
-			g_clDisplay.Print( "O" );
-		}
-		else
-		{
-			g_clDisplay.Print( "." );
-		}
+		g_clDisplay.Print( F( "\nOutput:\n" ) );
 
-		uiMask >>= 1;
-	}
-
-	g_clDisplay.Print( F( "\nSensor:\n" ) );
-	uiMask = 0x8000;
-
-	for( idx = 0 ; IO_NUMBERS > idx ; idx++ )
-	{
-		if( uiAsSensors & uiMask )
+		for( idx = 0 ; IO_NUMBERS > idx ; idx++ )
 		{
-			g_clDisplay.Print( "S" );
-		}
-		else
-		{
-			g_clDisplay.Print( "." );
+			if( uiAsOutputs & uiMask )
+			{
+				g_clDisplay.Print( "O" );
+			}
+			else
+			{
+				g_clDisplay.Print( "." );
+			}
+
+			uiMask >>= 1;
 		}
 
-		uiMask >>= 1;
-	}
+		g_clDisplay.Print( F( "\nSensor:\n" ) );
+		uiMask = 0x8000;
 
-	g_clDisplay.Print( F( "\nInvert:\n" ) );
-	uiMask = 0x8000;
-
-	for( idx = 0 ; IO_NUMBERS > idx ; idx++ )
-	{
-		if( uiIsInverse & uiMask )
+		for( idx = 0 ; IO_NUMBERS > idx ; idx++ )
 		{
-			g_clDisplay.Print( "I" );
-		}
-		else
-		{
-			g_clDisplay.Print( "." );
+			if( uiAsSensors & uiMask )
+			{
+				g_clDisplay.Print( "S" );
+			}
+			else
+			{
+				g_clDisplay.Print( "." );
+			}
+
+			uiMask >>= 1;
 		}
 
-		uiMask >>= 1;
+		g_clDisplay.Print( F( "\nInvert:\n" ) );
+		uiMask = 0x8000;
+
+		for( idx = 0 ; IO_NUMBERS > idx ; idx++ )
+		{
+			if( uiIsInverse & uiMask )
+			{
+				g_clDisplay.Print( "I" );
+			}
+			else
+			{
+				g_clDisplay.Print( "." );
+			}
+
+			uiMask >>= 1;
+		}
 	}
 }
 
@@ -471,11 +540,14 @@ void DebuggingClass::PrintStatus(	uint16_t uiAsOutputs,
 									uint16_t uiOutState,
 									uint16_t uiInState )
 {
-	g_clDisplay.SetCursor( INPUT_STATE_LINE, STATE_COLUMN );
-	PrintStatusBits( uiAsOutputs, uiInState );
+	if( m_bDisplayPresent )
+	{
+		g_clDisplay.SetCursor( INPUT_STATE_LINE, STATE_COLUMN );
+		PrintStatusBits( uiAsOutputs, uiInState );
 
-	g_clDisplay.SetCursor( OUTPUT_STATE_LINE, STATE_COLUMN );
-	PrintStatusBits( ~uiAsOutputs, uiOutState );
+		g_clDisplay.SetCursor( OUTPUT_STATE_LINE, STATE_COLUMN );
+		PrintStatusBits( ~uiAsOutputs, uiOutState );
+	}
 }
 
 

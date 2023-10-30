@@ -9,6 +9,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		vom: 26.10.2023
+//#
+//#	Implementation:
+//#		-	change in message handling
+//#			change in function
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		vom: 14.02.2022
 //#
 //#	Implementation:
@@ -24,6 +33,8 @@
 //==========================================================================
 
 #include <stdint.h>
+
+#include "notify_types.h"
 
 
 //==========================================================================
@@ -45,7 +56,7 @@ class MyLoconetClass
 
 		void Init( void );
 		void CheckForMessage( void );
-		void LoconetReceived( bool isSensor, uint16_t adr, uint8_t dir, uint8_t output );
+		void LoconetReceived( notify_type_t type, uint16_t adr, uint8_t dir, uint8_t output );
 		void SendMessage( uint16_t adr, uint16_t mask, uint8_t dir );
 
 		inline uint16_t GetInputStatus( void )
