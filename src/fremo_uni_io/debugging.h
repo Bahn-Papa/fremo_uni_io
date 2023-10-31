@@ -10,13 +10,10 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File version:	4		vom: 30.10.2023
+//#	File version:	4		vom: 31.10.2023
 //#
 //#	Implementation:
 //#		-	switch to new OLED library, SimpleOled
-//#		-	do not send any command to display if it is not present
-//#			new variable
-//#				m_bDisplayPresent
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -114,7 +111,6 @@ class DebuggingClass
 		void PrintCounter( void );
 
 	private:
-		bool			m_bDisplayPresent;
 		notify_type_t	m_NotifyType;
 		uint32_t		m_counter;
 

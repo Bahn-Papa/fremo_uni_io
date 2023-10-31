@@ -9,9 +9,9 @@
 //#		-	DEBUGGING_PRINTOUT
 //#			If defined, debug info and/or text is shown on an OLED display
 //#
-//#		-	OLED_CHIP_TYPE_SSD1306
-//#			If defined, an OLED display with chip type SSD1306 is connected.
-//#			Otherwise the chip type is SH1106
+//#		-	OLED_CHIP_TYPE_SH1106
+//#			If defined, an OLED display with chip type SH1106 is connected.
+//#			Otherwise the chip type is SSD1306
 //#
 //#		-	PLATINE_VERSION
 //#			defines for which board version the software will be compiled.
@@ -23,7 +23,7 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File version:	2		vom: 30.10.2023
+//#	File version:	2		vom: 31.10.2023
 //#
 //#	Implementation:
 //#		-	new definition to specify the chip type of the connected
@@ -47,6 +47,6 @@
 
 #define DEBUGGING_PRINTOUT
 
-#define OLED_CHIP_TYPE_SSD1306
+#define OLED_CHIP_TYPE_SH1106
 
 #define PLATINE_VERSION			4
