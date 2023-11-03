@@ -197,7 +197,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_ARTIKEL_NUMMER,	ARTIKEL_NUMMER );		//	Artikel-Nummer
 		WriteLNCV( LNCV_ADR_VERSION_NUMBER, uiVersionNumber );		//	Version Number
 
-		WriteLNCV( LNCV_ADR_CONFIGURATION, 0 );						//	no configuration
+		WriteLNCV( LNCV_ADR_SWITCH_AS_REPORT, 0 );					//	no switch reports
 		WriteLNCV( LNCV_ADR_SEND_DELAY, DEFAULT_SEND_DELAY_TIME );	//	Send Delay Timer
 		
 		//----------------------------------------------------------

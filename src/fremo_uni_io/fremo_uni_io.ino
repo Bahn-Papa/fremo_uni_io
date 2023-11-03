@@ -18,8 +18,8 @@
 //	The main version is defined by PLATINE_VERSION (compile_options.h)
 //
 //#define VERSION_MAIN	1
-#define	VERSION_MINOR	5
-#define VERSION_HOTFIX	1
+#define	VERSION_MINOR	6
+#define VERSION_HOTFIX	2
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -27,6 +27,21 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.06.02		from: 03.11.2023
+//#
+//#	Bug Fix:
+//#		-	change in handling of ModuleAddress and Article Number
+//#			in module my_loconet
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.06.01		from: 03.11.2023
+//#
+//#	Implementation:
+//#		-	changes in handling of msg types
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -198,7 +213,8 @@
 uint32_t	g_ulReadInputTimer					= 0L;
 uint32_t	g_ulPrintStatusTimer				= 0L;
 uint32_t	g_arulOffDelayTimer[ IO_NUMBERS ];
-uint16_t	g_uiLnState;
+uint16_t	g_uiLnStateReceived;
+uint16_t	g_uiLnStateSend;
 uint16_t	g_uiIOState;
 bool		g_bIsProgMode;
 
@@ -219,17 +235,17 @@ void (*resetFunc)( void ) = 0;
 
 
 //**************************************************************************
-//	CheckLnState
+//	CheckLnStateAndSetOutputs
 //--------------------------------------------------------------------------
 //	The function will check the changes in the Loconet state and 
 //	will switch the output(s) accordingly
 //
-void CheckLnState( uint16_t uiNewLnState )
+void CheckLnStateAndSetOutputs( uint16_t uiNewLnState )
 {
 	//------------------------------------------------------------------
 	//	get difference between old and actual state ...
 	//
-	uint16_t	uiDiff		= g_uiLnState ^ uiNewLnState;
+	uint16_t	uiDiff		= g_uiLnStateReceived ^ uiNewLnState;
 	uint16_t	uiMask		= 0x0001;
 	uint8_t		usDir		= 0;
 	uint8_t		idx			= 0;
@@ -268,7 +284,7 @@ void CheckLnState( uint16_t uiNewLnState )
 		uiMask <<= 1;
 	}
 
-	g_uiLnState = uiNewLnState;
+	g_uiLnStateReceived = uiNewLnState;
 }
 
 
@@ -306,12 +322,13 @@ uint16_t GetIOState( void )
 //	CheckIOState
 //--------------------------------------------------------------------------
 //	The function will check the changes in the IO state and 
-//	will send the appropriate Loconet messages accordingly
+//	will set up the info which Loconet messages to send
 //
-void CheckIOState( uint16_t uiNewIOState )
+uint16_t CheckIOState( uint16_t uiNewIOState )
 {
-	uint32_t	ulOffTimer	= 0L;
-	uint16_t	uiOffDelay	= 0;
+	uint16_t	uiNewLnStateSend	= g_uiLnStateSend;
+	uint32_t	ulOffTimer			= 0L;
+	uint16_t	uiOffDelay			= 0;
 
 	//------------------------------------------------------------------
 	//	get difference between old and actual state ...
@@ -334,27 +351,31 @@ void CheckIOState( uint16_t uiNewIOState )
 		{
 			if( uiNewIOState & uiMask )
 			{
-				//------------------------------------------------------
-				//	if the off delay timer is active stop timer
-				//	and stay in 'ON' state
-				//	else send the Loconet message for IO pin is ON
+				//----------------------------------------------
+				//	the new state of the pin is ON
 				//
 				if( g_arulOffDelayTimer[ idx ] )
 				{
+					//------------------------------------------
+					//	if the off delay timer is active
+					//	then stop timer and stay in 'ON' state
+					//	there is no need to send a msg
+					//
 					g_arulOffDelayTimer[ idx ] = 0L;
 				}
 				else
 				{
-					g_clMyLoconet.SendMessage( g_clLncvStorage.GetIOAddress( idx ),
-												uiMask, 1							);
+					//------------------------------------------
+					//	else update the new lN send state
+					//
+					uiNewLnStateSend |= uiMask;
 				}
 			}
 			else
 			{
-				//------------------------------------------------------
+				//--------------------------------------------------
 				//	the IO pin has changed to OFF, so if there is a
-				//	delay time configured start the delay timer
-				//	else send the loconet message for IO pin is OFF
+				//	delay time configured then start the delay timer
 				//
 				uiOffDelay = g_clLncvStorage.GetIOOffDelay( idx );
 				
@@ -364,12 +385,14 @@ void CheckIOState( uint16_t uiNewIOState )
 				}
 				else
 				{
-					g_clMyLoconet.SendMessage( g_clLncvStorage.GetIOAddress( idx ),
-												uiMask, 0							);
+					//------------------------------------------
+					//	else update the new lN send state
+					//
+					uiNewLnStateSend &= ~uiMask;
 				}
 			}
 
-			//----------------------------------------------------------
+			//------------------------------------------------------
 			//	this change was handled,
 			//	so clear the corresponding bit
 			//
@@ -384,7 +407,7 @@ void CheckIOState( uint16_t uiNewIOState )
 	
 	//------------------------------------------------------------------
 	//	now check if any delay timer is lapsed and if so stop the timer
-	//	and send the loconet message for IO pin OFF for that pin
+	//	and update the new LN send state
 	//
 	uiMask = 0x0001;
 
@@ -396,11 +419,168 @@ void CheckIOState( uint16_t uiNewIOState )
 		{
 			g_arulOffDelayTimer[ idx ] = 0L;
 
-			g_clMyLoconet.SendMessage( g_clLncvStorage.GetIOAddress( idx ),	uiMask, 0 );
+			uiNewLnStateSend &= ~uiMask;
 		}
 
 		uiMask <<= 1;
 	}
+
+	return( uiNewLnStateSend );
+}
+
+
+//**************************************************************************
+//	CheckToSendIOState
+//--------------------------------------------------------------------------
+//	The function will check the changes in the IO state and 
+//	will send the appropriate Loconet messages accordingly
+//
+void CheckToSendIOState( uint16_t uiNewIOState )
+{
+	notify_type_t	type;
+	uint16_t		asInputs		= g_clLncvStorage.GetAsInputs();
+	uint16_t		asSensor		= g_clLncvStorage.GetAsSensor();
+	uint16_t		asReport		= g_clLncvStorage.GetAsReport();
+	uint16_t		isInverse		= g_clLncvStorage.GetIsInverse();
+	uint16_t		uiAddress		= 0;
+	uint8_t			usInfo;
+	uint8_t			usOutputThrown	= 0;
+	bool			bIsGerade;
+	bool			bMsgPending		= false;
+
+	//------------------------------------------------------------------
+	//	get difference between old and actual state ...
+	//
+	uint16_t		uiDiff			= g_uiLnStateSend ^ uiNewIOState;
+	uint16_t		uiMask			= 0x0001;
+	uint8_t			idx				= 0;
+
+	//------------------------------------------------------------------
+	//	... but handle inputs only
+	//
+	uiDiff &= asInputs;
+
+	//------------------------------------------------------------------
+	//	now for each change send the appropriate Loconet message
+	//
+	while( 0 < uiDiff )
+	{
+		//----------------------------------------------------------
+		//	first check if the pin 'idx' is an input
+		//	if so, process the pin
+		//
+		if( asInputs & uiMask )
+		{
+			//------------------------------------------------------
+			//	second check if there is an address for this pin
+			//	and if so go on with processing
+			//
+			uiAddress = g_clLncvStorage.GetIOAddress( idx );
+			
+			if( 0 < uiAddress )
+			{
+				//--------------------------------------------------
+				//	prepare the bit info
+				//
+				if( uiNewIOState & uiMask )
+				{
+					usInfo = 1;
+				}
+				else
+				{
+					usInfo = 0;
+				}
+
+				if( isInverse & uiMask )
+				{
+					if( 0 == usInfo )
+					{
+						usInfo = 1;
+					}
+					else
+					{
+						usInfo = 0;
+					}
+				}
+
+				//--------------------------------------------------
+				//	now dected which kind of message will be send
+				//
+				if( asSensor & uiMask )
+				{
+					//------------------------------------------
+					//	pin is configured as sensor
+					//
+					type = NT_Sensor;
+				}
+				else if( asReport & uiMask )
+				{
+					//------------------------------------------
+					//	pin is configured as switch report
+					//
+					type	= NT_Report;
+
+					if( 0 == ((idx + 1) % 2) )
+					{
+						bIsGerade	= true;
+					}
+					else
+					{
+						bIsGerade		= false;
+						usOutputThrown	= usInfo;
+					}
+				}
+				else
+				{
+					//------------------------------------------
+					//	pin is configured as switch request
+					//
+					type = NT_Request;
+				}
+
+				if( uiDiff & uiMask )
+				{
+					if( (NT_Report == type) && !bIsGerade )
+					{
+						//------------------------------------------
+						//	if the notifiy type is NT_Report
+						//	we need 2 infos to send the msg.
+						//	so we can send the msg only when we
+						//	are at even count, ergo set the flag
+						//	that we still must send a msg
+						//
+						bMsgPending = true;
+					}
+					else
+					{
+						//------------------------------------------
+						//	in all other cases just send the msg
+						//
+						g_clMyLoconet.SendMessage( type, uiAddress, usInfo, usOutputThrown );
+
+						bMsgPending = false;
+					}
+
+					//------------------------------------------------------
+					//	this change was handled,
+					//	so clear the corresponding bit
+					//
+					uiDiff &= ~uiMask;
+				}
+				else if( bMsgPending )
+				{
+					g_clMyLoconet.SendMessage( type, uiAddress, usInfo, usOutputThrown );
+
+					bMsgPending = false;
+				}
+			}
+		}
+
+		idx++;
+		uiMask <<= 1;
+	}
+
+	g_uiLnStateSend = uiNewIOState;
 }
 
 
@@ -411,7 +591,6 @@ void CheckIOState( uint16_t uiNewIOState )
 void setup()
 {
 	uint16_t	uiAsOutput;
-	uint16_t	uiIOStateStart;
 	uint16_t	uiLnStateStart;
 
 
@@ -446,6 +625,31 @@ void setup()
 
 	delay( 100 );
 
+	//----	LED check  -------------------------------------------------
+	g_clControl.RedLedOn();
+	
+	delay( 500 );
+	
+	g_clControl.RedLedOff();
+	g_clControl.GreenLedOn();
+	
+	delay( 500 );
+	
+	g_clControl.GreenLedOff();
+	g_clControl.RedLedOn();
+	
+	delay( 500 );
+	
+	g_clControl.GreenLedOn();
+	
+	delay( 500 );
+	
+	g_clControl.RedLedOff();
+	
+	delay( 500 );
+	
+	g_clControl.GreenLedOff();
+	
 	//----	Show Configuration  ----------------------------------------
 #ifdef DEBUGGING_PRINTOUT
 	g_clDebugging.PrintTitle( PLATINE_VERSION, VERSION_MINOR, VERSION_HOTFIX );
@@ -468,17 +672,17 @@ void setup()
 	//	the trick here is to set the old state values as inverted
 	//	actual states to get all I/Os set and LN messages send
 	//
-	uiIOStateStart	 = GetIOState();	//	actual state
-	g_uiIOState		 = ~uiIOStateStart;	//	trick to send all messages
-	g_uiIOState		&= ~uiAsOutput;		//	but only for inputs
+	g_uiIOState		 = GetIOState();	//	actual state
+	g_uiLnStateSend	 = ~g_uiIOState;	//	trick to send all messages
+	g_uiLnStateSend	&= ~uiAsOutput;		//	but only for inputs
 
-	CheckIOState( uiIOStateStart );		//	send messages
+	CheckToSendIOState( g_uiIOState );	//	send messages
 	
-	uiLnStateStart	 = g_clMyLoconet.GetInputStatus();	//	actual state
-	g_uiLnState		 = ~uiLnStateStart;	//	trick to set all pins
-	g_uiLnState		&= uiAsOutput;		//	but only for outputs
+	uiLnStateStart			 = g_clMyLoconet.GetInputStatus();	//	actual state
+	g_uiLnStateReceived		 = ~uiLnStateStart;	//	trick to set all pins
+	g_uiLnStateReceived		&= uiAsOutput;		//	but only for outputs
 
-	CheckLnState( uiLnStateStart );		//	set output pins
+	CheckLnStateAndSetOutputs( uiLnStateStart );
 
 	//----	Start Read Timer  ------------------------------------------
 	g_ulReadInputTimer = millis() + READ_INPUTS_TIME;
@@ -509,8 +713,8 @@ void loop()
 	//	depending of input pins and received LN messages
 	//	set output pins and send LN messages
 	//
-	CheckLnState( g_clMyLoconet.GetInputStatus() );
-	CheckIOState( GetIOState() );
+	CheckLnStateAndSetOutputs( g_clMyLoconet.GetInputStatus() );
+	CheckToSendIOState( CheckIOState( GetIOState() ) );
 
 	//------------------------------------------------------------------
 	//	Programmier-Modus
@@ -539,7 +743,7 @@ void loop()
 		g_ulPrintStatusTimer = millis() + PRINT_STATUS_TIME;
 
 		g_clDebugging.PrintStatus(	g_clLncvStorage.GetAsOutputs(),
-									g_uiLnState, g_uiIOState		);
+									g_uiLnStateReceived, g_uiIOState		);
 	}
 #endif
 }

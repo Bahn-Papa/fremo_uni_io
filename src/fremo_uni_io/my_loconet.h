@@ -9,12 +9,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File version:	2		vom: 26.10.2023
+//#	File version:	2		vom: 03.11.2023
 //#
 //#	Implementation:
 //#		-	change in message handling
 //#			change in function
 //#				LoconetReceived()
+//#				SendMessage()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -56,8 +57,8 @@ class MyLoconetClass
 
 		void Init( void );
 		void CheckForMessage( void );
-		void LoconetReceived( notify_type_t type, uint16_t adr, uint8_t dir, uint8_t output );
-		void SendMessage( uint16_t adr, uint16_t mask, uint8_t dir );
+		void LoconetReceived( notify_type_t type, uint16_t uiAdr, uint8_t usDirClosed, uint8_t usOutputThrown );
+		void SendMessage( notify_type_t type, uint16_t uiAdr, uint8_t usDirClosed, uint8_t usOutputThrown );
 
 		inline uint16_t GetInputStatus( void )
 		{

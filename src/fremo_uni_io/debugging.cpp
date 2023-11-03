@@ -7,6 +7,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		vom: 03.11.2023
+//#
+//#	Implementation:
+//#		-	change in handling of msg types
+//#			change in funtion
+//#				PrintNotifyMsg()
+//#				PrintNotifyType()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		vom: 31.10.2023
 //#
 //#	Implementation:
@@ -275,7 +285,7 @@ void DebuggingClass::PrintCounter( void )
 //
 void DebuggingClass::PrintNotifyType( notify_type_t type )
 {
-	m_NotifyType = type;
+	m_NotifyType	= type;
 
 #ifdef COUNT_ALL_MESSAGES
 
@@ -292,7 +302,7 @@ void DebuggingClass::PrintNotifyType( notify_type_t type )
 //	PrintNotifyMsg
 //------------------------------------------------------------------
 //
-void DebuggingClass::PrintNotifyMsg( uint16_t address, uint8_t dir )
+void DebuggingClass::PrintNotifyMsg( uint8_t usIdx, uint8_t usDirClosed, uint8_t usOutputThrown )
 {
 	SetLncvMsgPos();
 
@@ -300,24 +310,33 @@ void DebuggingClass::PrintNotifyMsg( uint16_t address, uint8_t dir )
 	{
 		case NT_Sensor:
 			g_clDisplay.Print( F( "E:Sensor\n" ) );
+			sprintf( g_chDebugString, "No:%3u - ", usIdx );
+			g_clDisplay.Print( g_chDebugString );
+			g_clDisplay.Print( (usDirClosed ? "green" : "red  ") );
 			break;
 
 		case NT_Request:
 			g_clDisplay.Print( F( "E:Switch Reqst\n" ) );
+			sprintf( g_chDebugString, "No:%3u - ", usIdx );
+			g_clDisplay.Print( g_chDebugString );
+			g_clDisplay.Print( (usDirClosed ? "green" : "red  ") );
 			break;
 
 		case NT_Report:
 			g_clDisplay.Print( F( "E:Switch Report\n" ) );
+			sprintf( g_chDebugString, "No:%3u ", usIdx );
+			g_clDisplay.Print( g_chDebugString );
+			sprintf( g_chDebugString, "C:%u, T:%u", (usDirClosed ? 1 : 0), (usOutputThrown ? 1 : 0) );
+			g_clDisplay.Print( g_chDebugString );
 			break;
 
 		case NT_State:
 			g_clDisplay.Print( F( "E:Switch State\n" ) );
+			sprintf( g_chDebugString, "No:%3u - ", usIdx );
+			g_clDisplay.Print( g_chDebugString );
+			g_clDisplay.Print( (usDirClosed ? "green" : "red  ") );
 			break;
 	}
-
-	sprintf( g_chDebugString, "Idx:%3u - ", address );
-	g_clDisplay.Print( g_chDebugString );
-	g_clDisplay.Print( (dir ? "green" : "red  ") );
 
 #ifdef COUNT_MY_MESSAGES
 

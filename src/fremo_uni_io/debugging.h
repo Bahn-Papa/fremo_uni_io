@@ -10,6 +10,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		vom: 03.11.2023
+//#
+//#	Implementation:
+//#		-	change in handling of msg types
+//#			change in funtion
+//#				PrintNotifyMsg()
+//#				PrintNotifyType()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		vom: 31.10.2023
 //#
 //#	Implementation:
@@ -88,7 +98,7 @@ class DebuggingClass
 		void PrintInfoLine( info_lines_t number );
 
 		void PrintNotifyType( notify_type_t type );
-		void PrintNotifyMsg( uint16_t address, uint8_t dir );
+		void PrintNotifyMsg( uint8_t usIdx, uint8_t usDirClosed, uint8_t usOutputThrown );
 
 		void PrintLncvDiscoverStart(	bool start,
 										uint16_t artikel,

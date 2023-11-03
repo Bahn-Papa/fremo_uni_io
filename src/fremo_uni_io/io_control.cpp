@@ -62,6 +62,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		vom: 01.11.2023
+//#
+//#	Bug Fix:
+//#		-	correction of macro definitions
+//#			change in 'sbi' and 'cbi'
+//#			change setup of 'g_arPortPins[]' from pin number to pin mask
+//#			change in function
+//#				Init()
+//#				IsInputSet()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	3		vom: 05.02.2023
 //#
 //#	Implementation:
@@ -118,7 +130,7 @@ uint8_t GetKeyStatePortF( uint8_t usMask );
 //==========================================================================
 
 #define	INIT_READ_INPUT_COUNT	6
-#define FLASH_TIME				250
+#define FLASH_TIME				500
 
 /*
 #define MASK_PORT_BIT_0			0x01
@@ -145,16 +157,16 @@ uint8_t GetKeyStatePortF( uint8_t usMask );
 //
 #if PLATINE_VERSION == 1
 
-	#define LED_GREEN		_BV( 0 )
+	#define LED_GREEN		_BV( PB0 )
 
 #else
 
-	#define RELAIS			_BV( 0 )
-	#define LED_GREEN		_BV( 2 )
+	#define RELAIS			_BV( PB0 )
+	#define LED_GREEN		_BV( PB2 )
 
 #endif
 
-#define LED_RED				_BV( 1 )
+#define LED_RED				_BV( PB1 )
 
 
 //---------------------------------------------------------------------
@@ -216,11 +228,15 @@ uint8_t GetKeyStatePortF( uint8_t usMask );
 //==========================================================================
 
 #ifndef cbi
-#define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
+#define cbi(sfr, mask) (_SFR_BYTE(sfr) &= ~(mask))
 #endif
 
 #ifndef sbi
-#define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
+#define sbi(sfr, mask) (_SFR_BYTE(sfr) |= (mask))
+#endif
+
+#ifndef my_bit_is_set
+#define my_bit_is_set(sfr, mask)	(0 != (_SFR_BYTE(sfr) & (mask)))
 #endif
 
 
@@ -261,14 +277,44 @@ typedef uint8_t (*func_ptr_t)( uint8_t );
 
 	uint8_t	g_arPortPins[ IO_NUMBERS ] =
 	{
-		PB6, PB5, PB7, PB7, PB4, PB2, PB7, PB6, PB7, PB6, PB5, PB4, PB6, PB5, PB1, PB0
+		_BV( PB6 ),
+		_BV( PB5 ),
+		_BV( PB7 ),
+		_BV( PB7 ),
+		_BV( PB4 ),
+		_BV( PB2 ),
+		_BV( PB7 ),
+		_BV( PB6 ),
+		_BV( PB7 ),
+		_BV( PB6 ),
+		_BV( PB5 ),
+		_BV( PB4 ),
+		_BV( PB6 ),
+		_BV( PB5 ),
+		_BV( PB1 ),
+		_BV( PB0 )
 	};
 
 #else
 
 	uint8_t	g_arPortPins[ IO_NUMBERS ] =
 	{
-		PB6, PB5, PB7, PB7, PB4, PB2, PB7, PB6, PB6, PB5, PB7, PB6, PB5, PB4, PB1, PB0
+		_BV( PB6 ),
+		_BV( PB5 ),
+		_BV( PB7 ),
+		_BV( PB7 ),
+		_BV( PB4 ),
+		_BV( PB2 ),
+		_BV( PB7 ),
+		_BV( PB6 ),
+		_BV( PB6 ),
+		_BV( PB5 ),
+		_BV( PB7 ),
+		_BV( PB6 ),
+		_BV( PB5 ),
+		_BV( PB4 ),
+		_BV( PB1 ),
+		_BV( PB0 )
 	};
 
 #endif
@@ -567,11 +613,11 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 	{
 		if( uiOutputs & uiMask )
 		{
-			*g_arOutputMasks[ idx ] |= _BV( g_arPortPins[ idx ] );
+			*g_arOutputMasks[ idx ] |= g_arPortPins[ idx ];
 		}
 		else
 		{
-			*g_arInputMasks[ idx ] |= _BV( g_arPortPins[ idx ] );
+			*g_arInputMasks[ idx ] |= g_arPortPins[ idx ];
 		}
 
 		uiMask <<= 1;
@@ -749,13 +795,14 @@ void IO_ControlClass::ReadInputs( void )
 //
 bool IO_ControlClass::IsInputSet( uint8_t usIOPin )
 {
-	uint8_t	usMask	= 0x01;
+//	uint8_t	usMask	= 0x01;
 	bool	retval	= false;
 
 	if( IO_NUMBERS > usIOPin )
 	{
-		usMask <<=  g_arPortPins[ usIOPin ];
-		retval	 = (0 != (*g_arFunctions[ usIOPin ])( usMask ));
+//		usMask <<=  g_arPortPins[ usIOPin ];
+//		retval	 = (0 != (*g_arFunctions[ usIOPin ])( usMask ));
+		retval	 = (0 != (*g_arFunctions[ usIOPin ])( g_arPortPins[ usIOPin ] ));
 	}
 
 	return( retval );
@@ -819,7 +866,7 @@ void IO_ControlClass::GreenLedFlash( void )
 //
 bool IO_ControlClass::IsGreenLedOn( void )
 {
-	return( bit_is_set( PINB, LED_GREEN ) );
+	return( my_bit_is_set( PINB, LED_GREEN ) );
 }
 
 
@@ -863,5 +910,5 @@ void IO_ControlClass::RedLedFlash( void )
 //
 bool IO_ControlClass::IsRedLedOn( void )
 {
-	return( bit_is_set( PINB, LED_RED ) );
+	return( my_bit_is_set( PINB, LED_RED ) );
 }
