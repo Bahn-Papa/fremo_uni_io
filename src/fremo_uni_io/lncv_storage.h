@@ -14,6 +14,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		vom: 17.11.2023
+//#
+//#	Implementation:
+//#		-	add address to send status
+//#			new define LNCV_ADR_SEND_STATUS
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		vom: 26.10.2023
 //#
 //#	Implementation:
@@ -90,6 +98,7 @@
 #define LNCV_ADR_VERSION_NUMBER			2
 #define LNCV_ADR_SWITCH_AS_REPORT		3
 #define LNCV_ADR_SEND_DELAY				4
+#define LNCV_ADR_SEND_STATUS			5
 
 #define LNCV_ADR_FIRST_IO_ADDRESS		11
 #define LNCV_ADR_LAST_IO_ADDRESS		26

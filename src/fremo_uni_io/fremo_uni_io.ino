@@ -9,6 +9,12 @@
 //# board:		Leonardo
 //#	processor:	ATmega32U4, 16 MHz
 //#
+//#-------------------------------------------------------------------------
+//#
+//#	Needed resources:
+//#		LocoNet Library		V 1.1.13
+//#		SimpleOled Library	V 1.2.1
+//#
 //##########################################################################
 
 #include "compile_options.h"
@@ -18,8 +24,8 @@
 //	The main version is defined by PLATINE_VERSION (compile_options.h)
 //
 //#define VERSION_MAIN	1
-#define	VERSION_MINOR	6
-#define VERSION_HOTFIX	2
+#define	VERSION_MINOR	7
+#define VERSION_HOTFIX	0
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -27,6 +33,17 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.07.00		from: 18.11.2023
+//#
+//#	Implementation:
+//#		-	avoid missunderstanding, so rename
+//#			clMyLoconet.GetInputStatus()	=>	clMyLoconet.GetOutputStatus()
+//#		-	add address to send the status of all inputs
+//#			change in function
+//#				loop()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -678,7 +695,7 @@ void setup()
 
 	CheckToSendIOState( g_uiIOState );	//	send messages
 	
-	uiLnStateStart			 = g_clMyLoconet.GetInputStatus();	//	actual state
+	uiLnStateStart			 = g_clMyLoconet.GetOutputStatus();	//	actual state
 	g_uiLnStateReceived		 = ~uiLnStateStart;	//	trick to set all pins
 	g_uiLnStateReceived		&= uiAsOutput;		//	but only for outputs
 
@@ -700,7 +717,14 @@ void loop()
 	//	-	Loconet messages
 	//	-	Input signals
 	//
-	g_clMyLoconet.CheckForMessage();
+	if( g_clMyLoconet.CheckForMessage() )
+	{
+		uint16_t	uiInputs = g_uiLnStateSend;
+
+		g_uiLnStateSend	= ~uiInputs;
+
+		CheckToSendIOState( uiInputs );
+	}
 
 	if( millis() > g_ulReadInputTimer )
 	{
@@ -713,7 +737,7 @@ void loop()
 	//	depending of input pins and received LN messages
 	//	set output pins and send LN messages
 	//
-	CheckLnStateAndSetOutputs( g_clMyLoconet.GetInputStatus() );
+	CheckLnStateAndSetOutputs( g_clMyLoconet.GetOutputStatus() );
 	CheckToSendIOState( CheckIOState( GetIOState() ) );
 
 	//------------------------------------------------------------------

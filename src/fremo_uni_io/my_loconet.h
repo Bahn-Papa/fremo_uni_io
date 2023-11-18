@@ -9,6 +9,21 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	3		vom: 18.11.2023
+//#
+//#	Implementation:
+//#		-	avoid missunderstanding, so rename
+//#				GetInputStatus()	=>	GetOutputStatus()
+//#				m_uiInputStatus		=>	m_uiOutputStatus
+//#		-	add message to send status of all inputs
+//#			new variable
+//#				m_uiAdrSendStatus
+//#				m_bSendStatus
+//#			change in function
+//#				CheckForMessage()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		vom: 03.11.2023
 //#
 //#	Implementation:
@@ -56,13 +71,13 @@ class MyLoconetClass
 		MyLoconetClass();
 
 		void Init( void );
-		void CheckForMessage( void );
+		bool CheckForMessage( void );
 		void LoconetReceived( notify_type_t type, uint16_t uiAdr, uint8_t usDirClosed, uint8_t usOutputThrown );
 		void SendMessage( notify_type_t type, uint16_t uiAdr, uint8_t usDirClosed, uint8_t usOutputThrown );
 
-		inline uint16_t GetInputStatus( void )
+		inline uint16_t GetOutputStatus( void )
 		{
-			return( m_uiInputStatus );
+			return( m_uiOutputStatus );
 		}
 
 		inline void SetProgMode( bool bMode )
@@ -76,8 +91,10 @@ class MyLoconetClass
 		};
 
 	private:
-		uint16_t	m_uiInputStatus;
+		uint16_t	m_uiOutputStatus;
+		uint16_t	m_uiAdrSendStatus;
 		bool		m_bIsProgMode;
+		bool		m_bSendStatus;
 };
 
 

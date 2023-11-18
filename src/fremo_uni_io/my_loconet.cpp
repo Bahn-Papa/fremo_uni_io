@@ -7,6 +7,23 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	7		vom: 17.11.2023
+//#
+//#	Implementation:
+//#		-	avoid missunderstanding, so rename
+//#				GetInputStatus()	=>	GetOutputStatus()
+//#				m_uiInputStatus		=>	m_uiOutputStatus
+//#		-	add message to send status of all inputs
+//#			new variable
+//#				m_uiAdrSendStatus
+//#				m_bSendStatus
+//#			change in function
+//#				Init()
+//#				LoconetReceived()
+//#				CheckForMessage()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	6		vom: 03.11.2023
 //#
 //#	Implementation:
@@ -142,8 +159,10 @@ uint16_t		 g_uiModuleAddress;
 //
 MyLoconetClass::MyLoconetClass()
 {
-	m_uiInputStatus	= 0x0000;
-	m_bIsProgMode	= false;
+	m_uiOutputStatus	= 0x0000;
+	m_uiAdrSendStatus	= 0x0000;
+	m_bIsProgMode		= false;
+	m_bIsProgMode		= false;
 }
 
 
@@ -156,6 +175,8 @@ void MyLoconetClass::Init( void )
 	g_uiArticleNumber	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
 	g_uiModuleAddress	= g_clLncvStorage.ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
 
+	m_uiAdrSendStatus	= g_clLncvStorage.ReadLNCV( LNCV_ADR_SEND_STATUS );
+
 	LocoNet.init( LOCONET_TX_PIN );
 }
 
@@ -164,9 +185,11 @@ void MyLoconetClass::Init( void )
 //	CheckForAndHandleMessage
 //------------------------------------------------------------------
 //
-void MyLoconetClass::CheckForMessage( void )
+bool MyLoconetClass::CheckForMessage( void )
 {
-	g_pLnPacket = LocoNet.receive();
+	m_bSendStatus	= false;
+
+	g_pLnPacket		= LocoNet.receive();
 
 	if( g_pLnPacket )
 	{
@@ -175,6 +198,8 @@ void MyLoconetClass::CheckForMessage( void )
 			g_clLNCV.processLNCVMessage( g_pLnPacket );
 		}
 	}
+
+	return( m_bSendStatus );
 }
 
 
@@ -184,7 +209,7 @@ void MyLoconetClass::CheckForMessage( void )
 //	This function checks if the received message is for 'us'.
 //	This is done by checking whether the address of the message
 //	matches one of the stored addresses.
-//	If so, the corresponding bit of the 'InputState' will be set
+//	If so, the corresponding bit of the 'OutputState' will be set
 //	according to the info in the message.
 //
 void MyLoconetClass::LoconetReceived(	notify_type_t	type,
@@ -201,6 +226,18 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 	uint8_t		usInfo		= 0;
 	bool		bFound;
 
+	//--------------------------------------------------------------
+	//	check if the status of all inputs should be send
+	//
+	if( uiAdr == m_uiAdrSendStatus )
+	{
+		m_bSendStatus	= true;
+
+		return;
+	}
+
+	//--------------------------------------------------------------
+	//	
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
 		bFound = false;
@@ -283,11 +320,11 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 
 					if(	usInfo )
 					{
-						m_uiInputStatus |= mask;
+						m_uiOutputStatus |= mask;
 					}
 					else
 					{
-						m_uiInputStatus &= ~mask;
+						m_uiOutputStatus &= ~mask;
 					}
 
 #ifdef DEBUGGING_PRINTOUT
@@ -567,7 +604,8 @@ int8_t notifyLNCVwrite( uint16_t ArtNr, uint16_t Address, uint16_t Value )
 				if( LNCV_ADR_MODULE_ADDRESS == Address )
 				{
 					g_uiModuleAddress = Value;
-				}			}
+				}
+			}
 
 			retval = LNCV_LACK_OK;
 		}
