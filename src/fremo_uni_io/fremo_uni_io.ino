@@ -25,7 +25,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	7
-#define VERSION_HOTFIX	1
+#define VERSION_HOTFIX	2
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -33,6 +33,15 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.07.02		from: 07.02.2024
+//#
+//#	Bug Fix:
+//#		-	changed position of paramters for NT_Report messages
+//#			change in function
+//#				CheckToSendIOState()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -619,10 +628,20 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 					//------------------------------------------
 					//	send the loconet message
 					//
-					g_clMyLoconet.SendMessage(	type,
-												uiAddress,
-												usInfo,
-												usOutputThrown );
+					if( NT_Report == type )
+					{
+						g_clMyLoconet.SendMessage(	type,
+													uiAddress,
+													usOutputThrown,
+													usInfo			);
+					}
+					else
+					{
+						g_clMyLoconet.SendMessage(	type,
+													uiAddress,
+													usInfo,
+													usOutputThrown );
+					}
 				}
 			}
 		}
