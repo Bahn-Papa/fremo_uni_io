@@ -514,7 +514,7 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 				//
 				if( uiDiff & uiMask )
 				{
-					bDoSend = true;
+					bDoSendLnMsg = true;
 				}
 
 				//--------------------------------------------------
@@ -603,7 +603,7 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 					//
 					if( uiDiff & uiMask )
 					{
-						bDoSend = true;
+						bDoSendLnMsg = true;
 					}
 				}
 				else
@@ -614,7 +614,7 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 					type = NT_Request;
 				}
 
-				if( bDoSend )
+				if( bDoSendLnMsg )
 				{
 					//------------------------------------------
 					//	send the loconet message
