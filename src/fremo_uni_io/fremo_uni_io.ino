@@ -25,7 +25,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	7
-#define VERSION_HOTFIX	0
+#define VERSION_HOTFIX	1
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -33,6 +33,17 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.07.01		from: 07.02.2024
+//#
+//#	Bug Fix:
+//#		-	new evaluation if a loconet message should be send
+//#			parameters for messages of type NT_Report were evaluated the
+//#			wrong way
+//#			change in function
+//#				CheckToSendIOState()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -462,8 +473,7 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 	uint16_t		uiAddress		= 0;
 	uint8_t			usInfo;
 	uint8_t			usOutputThrown	= 0;
-	bool			bIsGerade;
-	bool			bMsgPending		= false;
+	bool			bDoSendLnMsg;
 
 	//------------------------------------------------------------------
 	//	get difference between old and actual state ...
@@ -482,6 +492,8 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 	//
 	while( 0 < uiDiff )
 	{
+		bDoSendLnMsg= false;	//	by default don't send a loconet message
+
 		//----------------------------------------------------------
 		//	first check if the pin 'idx' is an input
 		//	if so, process the pin
@@ -496,6 +508,15 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 			
 			if( 0 < uiAddress )
 			{
+				//--------------------------------------------------
+				//	find out and remember if a loconet message
+				//	must be send
+				//
+				if( uiDiff & uiMask )
+				{
+					bDoSend = true;
+				}
+
 				//--------------------------------------------------
 				//	prepare the bit info
 				//
@@ -534,17 +555,55 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 				{
 					//------------------------------------------
 					//	pin is configured as switch report
+					//	we need the info of a second pin
+					//	so remember the actual pin info ...
 					//
-					type	= NT_Report;
+					type			= NT_Report;
+					usOutputThrown	= usInfo;
 
-					if( 0 == ((idx + 1) % 2) )
+					//------------------------------------------
+					//	... then remove the actual pin from
+					//	the diff list, ...
+					//
+					uiDiff &= ~uiMask;
+
+					//------------------------------------------
+					//	... go to the next pin, ...
+					//
+					idx++;
+					uiMask <<= 1;
+					
+					//------------------------------------------
+					//	... get the bit info, ...
+					//
+					if( uiNewIOState & uiMask )
 					{
-						bIsGerade	= true;
+						usInfo = 1;
 					}
 					else
 					{
-						bIsGerade		= false;
-						usOutputThrown	= usInfo;
+						usInfo = 0;
+					}
+
+					if( isInverse & uiMask )
+					{
+						if( 0 == usInfo )
+						{
+							usInfo = 1;
+						}
+						else
+						{
+							usInfo = 0;
+						}
+					}
+
+					//------------------------------------------
+					//	... and find out if a loconet message
+					//	must be send
+					//
+					if( uiDiff & uiMask )
+					{
+						bDoSend = true;
 					}
 				}
 				else
@@ -555,44 +614,27 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 					type = NT_Request;
 				}
 
-				if( uiDiff & uiMask )
+				if( bDoSend )
 				{
-					if( (NT_Report == type) && !bIsGerade )
-					{
-						//------------------------------------------
-						//	if the notifiy type is NT_Report
-						//	we need 2 infos to send the msg.
-						//	so we can send the msg only when we
-						//	are at even count, ergo set the flag
-						//	that we still must send a msg
-						//
-						bMsgPending = true;
-					}
-					else
-					{
-						//------------------------------------------
-						//	in all other cases just send the msg
-						//
-						g_clMyLoconet.SendMessage( type, uiAddress, usInfo, usOutputThrown );
-
-						bMsgPending = false;
-					}
-
-					//------------------------------------------------------
-					//	this change was handled,
-					//	so clear the corresponding bit
+					//------------------------------------------
+					//	send the loconet message
 					//
-					uiDiff &= ~uiMask;
-				}
-				else if( bMsgPending )
-				{
-					g_clMyLoconet.SendMessage( type, uiAddress, usInfo, usOutputThrown );
-
-					bMsgPending = false;
+					g_clMyLoconet.SendMessage(	type,
+												uiAddress,
+												usInfo,
+												usOutputThrown );
 				}
 			}
 		}
 
+		//----------------------------------------------------------
+		//	remove the pin from the diff list
+		//
+		uiDiff &= ~uiMask;
+
+		//----------------------------------------------------------
+		//	prepare to check the next pin
+		//
 		idx++;
 		uiMask <<= 1;
 	}
