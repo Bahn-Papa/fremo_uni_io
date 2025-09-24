@@ -10,6 +10,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		vom: 24.09.2025
+//#
+//#	Implementation:
+//#		-	add a mask for low active input bits
+//#			new variable
+//#				m_usLowActiveMask
+//#			change in function
+//#				constructor()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		vom: 14.02.2022
 //#
 //#	Implementation:
@@ -48,10 +59,12 @@ class DebounceClass
 		//	creates an instance of the class DebounceClass
 		//
 		//	Parameter:
-		//		repeatMask	Specifies in a bit mask for which keys the
-		//					repeat function will be switched on
+		//		lowActiveMask	Specifies in a bit mask which keys
+		//						(input bits) are low active.
+		//		repeatMask		Specifies in a bit mask for which keys
+		//						the repeat function will be switched on
 		//
-		DebounceClass( uint8_t repeatMask );
+		DebounceClass( uint8_t lowActiveMask, uint8_t repeatMask );
 
 		//--------------------------------------------------------------
 		//	This is where the actual debouncing takes place.
@@ -138,6 +151,13 @@ class DebounceClass
 		};
 
 	private:
+		//--------------------------------------------------------------
+		//		m_usRepeatMask
+		//
+		//	contains the mask which keys are low active
+		//
+		uint8_t	m_usLowActiveMask;
+
 		//--------------------------------------------------------------
 		//		m_usRepeatMask
 		//

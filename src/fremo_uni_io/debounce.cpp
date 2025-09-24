@@ -7,6 +7,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		vom: 24.09.2025
+//#
+//#	Implementation:
+//#		-	add a mask for low active input bits
+//#			new variable
+//#				m_usLowActiveMask
+//#			change in function
+//#				constructor()
+//#				Work()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1	vom: 14.02.2022
 //#
 //#	Implementation:
@@ -52,11 +64,14 @@
 //	creates an instance of the class DebounceClass
 //
 //	Parameter:
-//		repeatMask	Specifies in a bit mask for which keys the
-//					repeat function will be switched on
+//		lowActiveMask	Specifies in a bit mask which keys
+//						(input bits) are low active.
+//		repeatMask		Specifies in a bit mask for which keys
+//						the repeat function will be switched on
 //
-DebounceClass::DebounceClass( uint8_t repeatMask )
+DebounceClass::DebounceClass( uint8_t lowActiveMask, uint8_t repeatMask )
 {
+	m_usLowActiveMask	= lowActiveMask;
 	m_usRepeatMask		= repeatMask;
 
 	m_usKeyState		= 0;
@@ -80,7 +95,7 @@ DebounceClass::DebounceClass( uint8_t repeatMask )
 //
 void DebounceClass::Work( uint8_t keyIn )
 {
-	uint8_t	help	 =	m_usKeyState ^ ~keyIn;
+	uint8_t	help	 =	m_usKeyState ^ (m_usLowActiveMask ^ keyIn);
 
 	m_usDebounce1	 = ~(m_usDebounce1 & help);
 	m_usDebounce2	 =   m_usDebounce1 ^ (m_usDebounce2 & help);
