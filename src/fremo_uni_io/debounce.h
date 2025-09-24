@@ -10,6 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	3		vom: 24.09.2025
+//#
+//#	Implementation:
+//#		-	add a function to set the mask which input bits are low active
+//#			new function
+//#				SetLowActiveMask()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		vom: 24.09.2025
 //#
 //#	Implementation:
@@ -136,6 +145,20 @@ class DebounceClass
 		//					be checked
 		//
 		uint8_t GetKeyLong( uint8_t key_mask );
+
+		//--------------------------------------------------------------
+		//	sets the low active mask for the input bits that are
+		//	denoted in the bit field
+		//
+		//	Parameter:
+		//		low_active_mask		Specifies a bit mask to indicate
+		//							which keys (input bits) are
+		//							low active
+		//
+		inline void SetLowActiveMask( uint8_t low_active_mask )
+		{
+			m_usLowActiveMask = low_active_mask;
+		};
 
 		//--------------------------------------------------------------
 		//	sets the repeat mask to enable the repeat function for
