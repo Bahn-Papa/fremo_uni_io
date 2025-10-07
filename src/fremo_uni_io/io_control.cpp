@@ -62,6 +62,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		vom: 12.09.2025
+//#
+//#	Implementation:
+//#		-	change the handling of the signal way from input to
+//#			loconet message
+//#			new private variable
+//#				m_uiInvert
+//#			change in function
+//#				Init()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		vom: 01.11.2023
 //#
 //#	Bug Fix:
@@ -248,22 +260,32 @@ uint8_t GetKeyStatePortF( uint8_t usMask );
 
 IO_ControlClass		g_clControl	= IO_ControlClass();
 
-DebounceClass		g_clPortB( 0x00 );
-DebounceClass		g_clPortC( 0x00 );
-DebounceClass		g_clPortD( 0x00 );
-DebounceClass		g_clPortE( 0x00 );
-DebounceClass		g_clPortF( 0x00 );
+DebounceClass		g_clPortB( 0x00, 0x00 );
+DebounceClass		g_clPortC( 0x00, 0x00 );
+DebounceClass		g_clPortD( 0x00, 0x00 );
+DebounceClass		g_clPortE( 0x00, 0x00 );
+DebounceClass		g_clPortF( 0x00, 0x00 );
 
 volatile uint8_t	g_usPortBInputs;
 volatile uint8_t	g_usPortBOutputs;
+volatile uint8_t	g_usPortBLowActive;
+
 volatile uint8_t	g_usPortCInputs;
 volatile uint8_t	g_usPortCOutputs;
+volatile uint8_t	g_usPortCLowActive;
+
 volatile uint8_t	g_usPortDInputs;
 volatile uint8_t	g_usPortDOutputs;
+volatile uint8_t	g_usPortDLowActive;
+
 volatile uint8_t	g_usPortEInputs;
 volatile uint8_t	g_usPortEOutputs;
+volatile uint8_t	g_usPortELowActive;
+
 volatile uint8_t	g_usPortFInputs;
 volatile uint8_t	g_usPortFOutputs;
+volatile uint8_t	g_usPortFLowActive;
+
 
 uint32_t			g_ulMillisFlash	= 0L;
 
@@ -365,6 +387,56 @@ typedef uint8_t (*func_ptr_t)( uint8_t );
 		&g_usPortFInputs,
 		&g_usPortFInputs,
 		&g_usPortFInputs
+	};
+
+#endif
+
+//----------------------------------------------------------------------
+//	this array contains the mapping universal pin numbering to
+//	address of variable containing the low active mask of a port
+//
+#if PLATINE_VERSION == 4
+
+	volatile uint8_t * g_arLowActiveMasks[ IO_NUMBERS ] =
+	{
+		&g_usPortDLowActive,
+		&g_usPortDLowActive,
+		&g_usPortDLowActive,
+		&g_usPortBLowActive,
+		&g_usPortBLowActive,
+		&g_usPortELowActive,
+		&g_usPortCLowActive,
+		&g_usPortCLowActive,
+		&g_usPortFLowActive,
+		&g_usPortFLowActive,
+		&g_usPortFLowActive,
+		&g_usPortFLowActive,
+		&g_usPortBLowActive,
+		&g_usPortBLowActive,
+		&g_usPortFLowActive,
+		&g_usPortFLowActive
+	};
+
+#else
+
+	volatile uint8_t * g_arLowActiveMasks[ IO_NUMBERS ] =
+	{
+		&g_usPortDLowActive,
+		&g_usPortDLowActive,
+		&g_usPortDLowActive,
+		&g_usPortBLowActive,
+		&g_usPortBLowActive,
+		&g_usPortELowActive,
+		&g_usPortCLowActive,
+		&g_usPortCLowActive,
+		&g_usPortBLowActive,
+		&g_usPortBLowActive,
+		&g_usPortFLowActive,
+		&g_usPortFLowActive,
+		&g_usPortFLowActive,
+		&g_usPortFLowActive,
+		&g_usPortFLowActive,
+		&g_usPortFLowActive
 	};
 
 #endif
@@ -574,14 +646,23 @@ IO_ControlClass::IO_ControlClass()
 {
 	g_usPortBInputs		= 0;
 	g_usPortBOutputs	= 0;
+	g_usPortBLowActive	= 0;
+
 	g_usPortCInputs		= 0;
 	g_usPortCOutputs	= 0;
+	g_usPortCLowActive	= 0;
+
 	g_usPortDInputs		= 0;
 	g_usPortDOutputs	= 0;
+	g_usPortDLowActive	= 0;
+
 	g_usPortEInputs		= 0;
 	g_usPortEOutputs	= 0;
+	g_usPortELowActive	= 0;
+
 	g_usPortFInputs		= 0;
 	g_usPortFOutputs	= 0;
+	g_usPortFLowActive	= 0;
 }
 
 
@@ -590,12 +671,12 @@ IO_ControlClass::IO_ControlClass()
 //------------------------------------------------------------------
 //	here for all Ports the relevant I/O pins will be configured.
 //
-void IO_ControlClass::Init( uint16_t uiOutputs )
+void IO_ControlClass::Init( uint16_t uiOutputs, uint16_t uiLowActive )
 {
 	uint16_t	uiMask = 0x0001;
 
 
-	m_uiOutputs = uiOutputs;
+	m_uiOutputs	= uiOutputs;
 
 	//--------------------------------------------------------------
 	//	identify the input and output mask for each port
@@ -618,6 +699,11 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 		else
 		{
 			*g_arInputMasks[ idx ] |= g_arPortPins[ idx ];
+
+			if( uiLowActive & uiMask )
+			{
+				*g_arLowActiveMasks[ idx ] |= g_arPortPins[ idx ];
+			}
 		}
 
 		uiMask <<= 1;
@@ -627,8 +713,10 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 	//
 	if( g_usPortBInputs )
 	{
-		DDRB	&= ~g_usPortBInputs;	//	configure as Input
-		PORTB	|=  g_usPortBInputs;	//	Pull-Up on
+		DDRB	&= ~g_usPortBInputs;						//	configure as Input
+		PORTB	|= (g_usPortBInputs & g_usPortBLowActive);	//	Pull-Up on, but only if low active
+
+		g_clPortB.SetLowActiveMask( g_usPortBLowActive );
 	}
 
 #if PLATINE_VERSION == 1
@@ -647,8 +735,10 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 	//
 	if( g_usPortCInputs )
 	{
-		DDRC	&= ~g_usPortCInputs;	//	configure as Input
-		PORTC	|=  g_usPortCInputs;	//	Pull-Up on
+		DDRC	&= ~g_usPortCInputs;						//	configure as Input
+		PORTC	|= (g_usPortCInputs & g_usPortCLowActive);	//	Pull-Up on, but only if low active
+
+		g_clPortC.SetLowActiveMask( g_usPortCLowActive );
 	}
 
 	if( g_usPortCOutputs )
@@ -661,8 +751,10 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 	//
 	if( g_usPortDInputs )
 	{
-		DDRD	&= ~g_usPortDInputs;	//	configure as Input
-		PORTD	|=  g_usPortDInputs;	//	Pull-Up on
+		DDRD	&= ~g_usPortDInputs;						//	configure as Input
+		PORTD	|= (g_usPortDInputs & g_usPortDLowActive);	//	Pull-Up on, but only if low active
+
+		g_clPortD.SetLowActiveMask( g_usPortDLowActive );
 	}
 
 	if( g_usPortDOutputs )
@@ -675,8 +767,10 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 	//
 	if( g_usPortEInputs )
 	{
-		DDRE	&= ~g_usPortEInputs;	//	configure as Input
-		PORTE	|=  g_usPortEInputs;	//	Pull-Up on
+		DDRE	&= ~g_usPortEInputs;						//	configure as Input
+		PORTE	|= (g_usPortEInputs & g_usPortELowActive);	//	Pull-Up on, but only if low active
+
+		g_clPortE.SetLowActiveMask( g_usPortELowActive );
 	}
 
 	if( g_usPortEOutputs )
@@ -689,8 +783,10 @@ void IO_ControlClass::Init( uint16_t uiOutputs )
 	//
 	if( g_usPortFInputs )
 	{
-		DDRF	&= ~g_usPortFInputs;	//	configure as Input
-		PORTF	|=  g_usPortFInputs;	//	Pull-Up on
+		DDRF	&= ~g_usPortFInputs;						//	configure as Input
+		PORTF	|= (g_usPortFInputs & g_usPortFLowActive);	//	Pull-Up on, but only if low active
+
+		g_clPortF.SetLowActiveMask( g_usPortFLowActive );
 	}
 
 	if( g_usPortFOutputs )

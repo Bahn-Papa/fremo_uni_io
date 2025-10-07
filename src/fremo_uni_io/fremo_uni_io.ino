@@ -24,8 +24,8 @@
 //	The main version is defined by PLATINE_VERSION (compile_options.h)
 //
 //#define VERSION_MAIN	1
-#define	VERSION_MINOR	7
-#define VERSION_HOTFIX	2
+#define	VERSION_MINOR	8
+#define VERSION_HOTFIX	0
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -33,6 +33,14 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.08.00		from: 07.10.2025
+//#
+//#	Implementation:
+//#		-	change the handling of the signal way from input to
+//#			loconet message
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -328,6 +336,7 @@ void CheckLnStateAndSetOutputs( uint16_t uiNewLnState )
 //**************************************************************************
 //	GetIOState
 //--------------------------------------------------------------------------
+//	The function collects the actual IO state and returns it.
 //
 uint16_t GetIOState( void )
 {
@@ -478,7 +487,6 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 	uint16_t		asInputs		= g_clLncvStorage.GetAsInputs();
 	uint16_t		asSensor		= g_clLncvStorage.GetAsSensor();
 	uint16_t		asReport		= g_clLncvStorage.GetAsReport();
-	uint16_t		isInverse		= g_clLncvStorage.GetIsInverse();
 	uint16_t		uiAddress		= 0;
 	uint8_t			usInfo;
 	uint8_t			usOutputThrown	= 0;
@@ -501,7 +509,7 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 	//
 	while( 0 < uiDiff )
 	{
-		bDoSendLnMsg= false;	//	by default don't send a loconet message
+		bDoSendLnMsg = false;	//	by default don't send a loconet message
 
 		//----------------------------------------------------------
 		//	first check if the pin 'idx' is an input
@@ -536,18 +544,6 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 				else
 				{
 					usInfo = 0;
-				}
-
-				if( isInverse & uiMask )
-				{
-					if( 0 == usInfo )
-					{
-						usInfo = 1;
-					}
-					else
-					{
-						usInfo = 0;
-					}
 				}
 
 				//--------------------------------------------------
@@ -592,18 +588,6 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 					else
 					{
 						usInfo = 0;
-					}
-
-					if( isInverse & uiMask )
-					{
-						if( 0 == usInfo )
-						{
-							usInfo = 1;
-						}
-						else
-						{
-							usInfo = 0;
-						}
 					}
 
 					//------------------------------------------
@@ -669,6 +653,7 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 void setup()
 {
 	uint16_t	uiAsOutput;
+	uint16_t	uiIsLowActive;
 	uint16_t	uiLnStateStart;
 
 
@@ -690,10 +675,11 @@ void setup()
 
 	delay( 500 );
 
-	uiAsOutput = g_clLncvStorage.GetAsOutputs();
+	uiAsOutput		= g_clLncvStorage.GetAsOutputs();
+	uiIsLowActive	= g_clLncvStorage.GetIsLowActive();
 
 	//----	other inits  -----------------------------------------------
-	g_clControl.Init( uiAsOutput );
+	g_clControl.Init( uiAsOutput, uiIsLowActive );
 	g_clMyLoconet.Init();
 
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
@@ -733,7 +719,7 @@ void setup()
 	g_clDebugging.PrintTitle( PLATINE_VERSION, VERSION_MINOR, VERSION_HOTFIX );
 	g_clDebugging.PrintStorageConfig(	g_clLncvStorage.GetAsOutputs(),
 										g_clLncvStorage.GetAsSensor(),
-										g_clLncvStorage.GetIsInverse()	);
+										g_clLncvStorage.GetIsLowActive()	);
 
 	delay( 2000 );
 #endif

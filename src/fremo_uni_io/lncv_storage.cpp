@@ -11,6 +11,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	10		vom: 24.09.2025
+//#
+//#	Implementation:
+//#		-	variable and function renamed to avoid misunderstandings
+//#			rename variable
+//#				m_uiInverse		to	m_uiLowActive
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	9		vom: 26.10.2023
 //#
 //#	Implementation:
@@ -241,7 +250,7 @@ void LncvStorageClass::Init( void )
 	m_uiSwitchReport	= ReadLNCV( LNCV_ADR_SWITCH_AS_REPORT );
 	m_uiOutputs			= 0x0000;
 	m_uiSensors			= 0x0000;
-	m_uiInverse			= 0x0000;
+	m_uiLowActive			= 0x0000;
 
 	//--------------------------------------------------------------
 	//	read send delay time
@@ -259,11 +268,24 @@ void LncvStorageClass::Init( void )
     //  for the IO addresses find out if it is
     //      input or output
     //      switch or sensor
-    //      react on RED or GREEN
+    //      react on LOW/RED or HIGH/GREEN
+	//	The config word has the following format:	xxxx m
+	//		xxxx	address
+	//		m		mode
+	//				0	-	output  switch msg RED   (0)  output ON
+	//				1	-	output  switch msg GREEN (1)  output ON
+	//				2	-	output  sensor msg RED   (0)  output ON
+	//				3	-	output  sensor msg GREEN (1)  output ON
+	//				4	-	input   active LOW  (0)  switch msg GREEN (1, log ON)
+	//				5	-	input   active HIGH (1)  switch msg GREEN (1, log ON)
+	//				6	-	input   active LOW  (0)  sensor msg GREEN (1, log ON)
+	//				7	-	input   active HIGH (1)  sensor msg GREEN (1, log ON)
+	//		output means:	lissening on Loconet and set IO pins
+	//		input  means:	check state of IO pins and send loconet msg
 	//
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
-		m_aruiOffDelay[ idx ]	= ReadLNCV( LNCV_ADR_FIRST_DELAY_ADDRESS + idx );
+		m_aruiOffDelay[ idx ]	 = ReadLNCV( LNCV_ADR_FIRST_DELAY_ADDRESS + idx );
 
         uiHelper				 = ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS + idx );
         m_aruiAddress[ idx ]	 = uiHelper / 10;
@@ -287,7 +309,7 @@ void LncvStorageClass::Init( void )
 
         if( 0 == (uiHelper & CONFIG_ACTIVE_GREEN) )
         {
-            m_uiInverse |= uiMask;
+            m_uiLowActive |= uiMask;
         }
 
         uiMask <<= 1;

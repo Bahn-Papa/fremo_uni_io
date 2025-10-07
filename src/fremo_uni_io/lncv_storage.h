@@ -14,6 +14,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	7		vom: 24.09.2025
+//#
+//#	Implementation:
+//#		-	variable and function renamed to avoid misunderstandings
+//#			rename variable
+//#				m_uiInverse		to	m_uiLowActive
+//#			rename function
+//#				GetIsInverse()	to	GetIsLowActive()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	6		vom: 17.11.2023
 //#
 //#	Implementation:
@@ -176,9 +187,9 @@ class LncvStorageClass
 
 		//----------------------------------------------------------
 		//
-		inline uint16_t	GetIsInverse( void )
+		inline uint16_t	GetIsLowActive( void )
 		{
-			return( m_uiInverse );
+			return( m_uiLowActive );
 		};
 
 		//----------------------------------------------------------
@@ -216,7 +227,7 @@ class LncvStorageClass
 		uint16_t	m_uiSendDelay;
 		uint16_t	m_uiOutputs;
 		uint16_t	m_uiSensors;
-		uint16_t	m_uiInverse;
+		uint16_t	m_uiLowActive;
 		uint16_t	m_aruiAddress[  IO_NUMBERS ];
 		uint16_t	m_aruiOffDelay[ IO_NUMBERS ];
 };

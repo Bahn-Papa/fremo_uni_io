@@ -12,6 +12,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	2		vom: 24.09.2025
+//#
+//#	Implementation:
+//#		-	change the handling of the signal way from input to
+//#			loconet message
+//#			new private variable
+//#				m_uiInvert
+//#			change in function
+//#				Init()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	1		vom: 14.02.2022
 //#
 //#	Implementation:
@@ -53,7 +65,7 @@ class IO_ControlClass
 	public:
 		IO_ControlClass();
 
-		void Init( uint16_t uiOutputs );
+		void Init( uint16_t uiOutputs, uint16_t uiLowActive );
 		void ReadInputs( void );
 
 		bool IsInputSet( uint8_t usIOPin );
@@ -71,6 +83,7 @@ class IO_ControlClass
 
 	private:
 		uint16_t	m_uiOutputs;
+		uint16_t	m_uiInvert;
 		bool		m_bLedGreen;
 		bool		m_bLedRed;
 };

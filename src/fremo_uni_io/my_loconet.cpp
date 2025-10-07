@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	8		vom: 07.10.2025
+//#
+//#	Implementation:
+//#		-	variable and function renamed to avoid misunderstandings
+//#			change in function
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	7		vom: 17.11.2023
 //#
 //#	Implementation:
@@ -217,13 +226,13 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 										uint8_t			usDirClosed,
 										uint8_t			usOutputThrown )
 {
-	uint16_t	asOutputs	= g_clLncvStorage.GetAsOutputs();
-	uint16_t	asSensor	= g_clLncvStorage.GetAsSensor();
-	uint16_t	isInverse	= g_clLncvStorage.GetIsInverse();
-	uint16_t	asReport	= g_clLncvStorage.GetAsReport();
-	uint16_t	ioAddress	= 0;
-	uint16_t	mask		= 0x0001;
-	uint8_t		usInfo		= 0;
+	uint16_t	asOutputs		= g_clLncvStorage.GetAsOutputs();
+	uint16_t	asSensor		= g_clLncvStorage.GetAsSensor();
+	uint16_t	uiIsLowActive	= g_clLncvStorage.GetIsLowActive();
+	uint16_t	asReport		= g_clLncvStorage.GetAsReport();
+	uint16_t	ioAddress		= 0;
+	uint16_t	mask			= 0x0001;
+	uint8_t		usInfo			= 0;
 	bool		bFound;
 
 	//--------------------------------------------------------------
@@ -306,7 +315,7 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 
 				if( bFound )
 				{
-					if( isInverse & mask )
+					if( uiIsLowActive & mask )
 					{
 						if( 0 == usInfo )
 						{
