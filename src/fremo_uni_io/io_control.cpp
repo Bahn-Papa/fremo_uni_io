@@ -906,6 +906,16 @@ bool IO_ControlClass::IsInputSet( uint8_t usIOPin )
 
 
 //******************************************************************
+//	IsOutputSet
+//------------------------------------------------------------------
+//
+bool IO_ControlClass::IsOutputSet( int8_t usIOPin )
+{
+	return( my_bit_is_set( *g_arPorts[ usIOPin ], g_arPortPins[ usIOPin ] ) );
+}
+
+
+//******************************************************************
 //	SetOutput
 //------------------------------------------------------------------
 //

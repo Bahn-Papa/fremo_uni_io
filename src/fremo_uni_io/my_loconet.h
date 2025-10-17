@@ -55,6 +55,27 @@
 
 //==========================================================================
 //
+//		T Y P E   D E F I N I T I O N S
+//
+//==========================================================================
+
+typedef struct
+{
+	uint16_t	m_uiToggleAddress;
+	uint16_t	m_uiEnableAddress;
+	uint8_t		m_usFirstOutput;
+	uint8_t		m_usSecondOutput;
+	uint8_t		m_usToggleFlags;
+	uint8_t		m_usEnableFlags;
+	uint8_t		m_usTobbleButtonIdx;
+	bool		m_bTogglePressed;
+	bool		m_bToggleEnabled;
+
+} toggle_t;
+
+
+//==========================================================================
+//
 //		C L A S S   D E F I N I T I O N S
 //
 //==========================================================================
@@ -80,6 +101,11 @@ class MyLoconetClass
 			return( m_uiOutputStatus );
 		}
 
+		inline toggle_t * GetToggleConfig( uint8_t idx )
+		{
+			return( &(m_arToggle[ idx ]) );
+		};
+
 		inline void SetProgMode( bool bMode )
 		{
 			m_bIsProgMode = bMode;
@@ -91,6 +117,7 @@ class MyLoconetClass
 		};
 
 	private:
+		toggle_t	m_arToggle[ TOGGLE_OPTIONS ];
 		uint16_t	m_uiOutputStatus;
 		uint16_t	m_uiAdrSendStatus;
 		bool		m_bIsProgMode;

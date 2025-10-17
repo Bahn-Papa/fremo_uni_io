@@ -14,6 +14,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	8		vom: 17.10.2025
+//#
+//#	Implementation:
+//#		-	add a 'toggle switch' functionallity
+//#			new definitions
+//#				TOGGLE_OPTIONS
+//#				LNCV_ADR_INITIAL_OUTPUT_STATE
+//#				LNCV_ADR_FIRST_TOGGLE_ADDRESS
+//#				LNCV_ADR_LAST_TOGGLE_ADDRESS
+//#			new functions
+//#				GetInitialOutputState()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	7		vom: 24.09.2025
 //#
 //#	Implementation:
@@ -94,6 +108,7 @@
 //==========================================================================
 
 #define IO_NUMBERS		16
+#define TOGGLE_OPTIONS	4
 
 
 //----------------------------------------------------------------------
@@ -110,11 +125,22 @@
 #define LNCV_ADR_SWITCH_AS_REPORT		3
 #define LNCV_ADR_SEND_DELAY				4
 #define LNCV_ADR_SEND_STATUS			5
+#define LNCV_ADR_INITIAL_OUTPUT_STATE	6
 
 #define LNCV_ADR_FIRST_IO_ADDRESS		11
 #define LNCV_ADR_LAST_IO_ADDRESS		26
 #define LNCV_ADR_FIRST_DELAY_ADDRESS	31
 #define LNCV_ADR_LAST_DELAY_ADDRESS		46
+
+#define LNCV_ADR_FIRST_TOGGLE_ADDRESS	50
+#define LNCV_ADR_LAST_TOGGLE_ADDRESS	59
+
+//----------------------------------------------------------------------
+//	LNCV configuration masks
+//
+#define CONFIG_INPUT			0x0004
+#define CONFIG_SENSOR			0x0002
+#define CONFIG_ACTIVE_GREEN		0x0001
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -135,6 +161,7 @@ class LncvStorageClass
 		bool		IsValidLNCVAddress( uint16_t Adresse );
 		uint16_t	ReadLNCV(  uint16_t Adresse );
 		void		WriteLNCV( uint16_t Adresse, uint16_t Value );
+		uint16_t	GetInitialOutputState( void );
 
 		//----------------------------------------------------------
 		//
@@ -219,6 +246,7 @@ class LncvStorageClass
 			
 			return( uiOffDelay );
 		}
+
 
 	private:
 		uint16_t	m_uiArticleNumber;

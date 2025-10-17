@@ -334,6 +334,16 @@ void CheckLnStateAndSetOutputs( uint16_t uiNewLnState )
 
 
 //**************************************************************************
+//	CheckAndHandleToggleFunc
+//--------------------------------------------------------------------------
+//	The function collects the actual IO state and returns it.
+//
+void CheckAndHandleToggleFunc( uint8_t inputIdx, uint8_t bOn )
+{
+}
+
+
+//**************************************************************************
 //	GetIOState
 //--------------------------------------------------------------------------
 //	The function collects the actual IO state and returns it.
@@ -526,15 +536,6 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 			if( 0 < uiAddress )
 			{
 				//--------------------------------------------------
-				//	find out and remember if a loconet message
-				//	must be send
-				//
-				if( uiDiff & uiMask )
-				{
-					bDoSendLnMsg = true;
-				}
-
-				//--------------------------------------------------
 				//	prepare the bit info
 				//
 				if( uiNewIOState & uiMask )
@@ -544,6 +545,17 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 				else
 				{
 					usInfo = 0;
+				}
+
+				//--------------------------------------------------
+				//	find out and remember if a loconet message
+				//	must be send
+				//
+				if( uiDiff & uiMask )
+				{
+					bDoSendLnMsg = true;
+
+					CheckAndHandleToggleFunc( idx, usInfo );
 				}
 
 				//--------------------------------------------------

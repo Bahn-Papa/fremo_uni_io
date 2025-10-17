@@ -68,8 +68,9 @@ class IO_ControlClass
 		void Init( uint16_t uiOutputs, uint16_t uiLowActive );
 		void ReadInputs( void );
 
-		bool IsInputSet( uint8_t usIOPin );
-		void SetOutput( uint8_t usIOPin, bool bOn );
+		bool IsInputSet(  uint8_t usIOPin );
+		bool IsOutputSet( uint8_t usIOPin );
+		void SetOutput(   uint8_t usIOPin, bool bOn );
 
 		void GreenLedOn(    void );
 		void GreenLedOff(   void );

@@ -153,13 +153,6 @@ LncvStorageClass	g_clLncvStorage = LncvStorageClass();
 #define	MIN_SEND_DELAY_TIME				 5
 #define DEFAULT_SEND_DELAY_TIME			10
 
-//----------------------------------------------------------------------
-//	configuration masks
-//
-#define CONFIG_INPUT			0x0004
-#define CONFIG_SENSOR			0x0002
-#define CONFIG_ACTIVE_GREEN		0x0001
-
 
 ////////////////////////////////////////////////////////////////////////
 //	CLASS: LncvStorageClass
@@ -236,6 +229,7 @@ void LncvStorageClass::Init( void )
 {
     uint16_t    uiHelper;
     uint16_t    uiMask      = 0x0001;
+	uint8_t		idx;
 
 
 #ifdef DEBUGGING_PRINTOUT
@@ -250,7 +244,7 @@ void LncvStorageClass::Init( void )
 	m_uiSwitchReport	= ReadLNCV( LNCV_ADR_SWITCH_AS_REPORT );
 	m_uiOutputs			= 0x0000;
 	m_uiSensors			= 0x0000;
-	m_uiLowActive			= 0x0000;
+	m_uiLowActive		= 0x0000;
 
 	//--------------------------------------------------------------
 	//	read send delay time
@@ -283,7 +277,7 @@ void LncvStorageClass::Init( void )
 	//		output means:	lissening on Loconet and set IO pins
 	//		input  means:	check state of IO pins and send loconet msg
 	//
-	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
+	for( idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
 		m_aruiOffDelay[ idx ]	 = ReadLNCV( LNCV_ADR_FIRST_DELAY_ADDRESS + idx );
 
@@ -320,9 +314,18 @@ void LncvStorageClass::Init( void )
 //**********************************************************************
 //	IsValidLNCVAdress
 //
+uint16_t LncvStorageClass::GetInitialOutputState( void )
+{
+	return( ReadLNCV( LNCV_ADR_INITIAL_OUTPUT_STATE ) );
+}
+
+
+//**********************************************************************
+//	IsValidLNCVAdress
+//
 bool LncvStorageClass::IsValidLNCVAddress( uint16_t Adresse )
 {
-	if( LNCV_ADR_LAST_DELAY_ADDRESS >= Adresse )
+	if( LNCV_ADR_LAST_TOGGLE_ADDRESS >= Adresse )
 	{
 		return( true );
 	}

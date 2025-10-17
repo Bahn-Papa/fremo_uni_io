@@ -114,6 +114,7 @@
 #endif
 
 #include "lncv_storage.h"
+#include "io_control.h"
 #include "my_loconet.h"
 
 
@@ -134,6 +135,14 @@
 #define SWITCH_GREEN			1
 #define SWITCH_CLOSED			SWITCH_GREEN
 #define SWITCH_GERADE			SWITCH_GREEN
+
+//----------------------------------------------------------------------
+//	LNCV toggle function offsets
+//
+#define TOGGLE_FUNC_BUTTON		0
+#define TOGGLE_FUNC_ADR			1
+#define TOGGLE_FUNC_ENABLE		2
+#define TOGGLE_FUNC_IO			3
 
 
 //==========================================================================
@@ -181,10 +190,77 @@ MyLoconetClass::MyLoconetClass()
 //
 void MyLoconetClass::Init( void )
 {
+	uint8_t		usLncv	= LNCV_ADR_FIRST_TOGGLE_ADDRESS;
+
+
 	g_uiArticleNumber	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
 	g_uiModuleAddress	= g_clLncvStorage.ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
 
 	m_uiAdrSendStatus	= g_clLncvStorage.ReadLNCV( LNCV_ADR_SEND_STATUS );
+
+	for( uint8_t idx = 0 ; TOGGLE_OPTIONS > idx ; idx++ )
+	{
+		uint16_t	uiHelper;
+		uint16_t	uiAdr;
+		uint16_t	uiMask;
+
+		//-------------------------------------------------
+		//	get output and button idx
+		//
+		bool	bFirst	= true;
+		uiAdr			= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_BUTTON );
+		uiHelper		= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_IO );
+		uiMask			= 0x0001;
+
+		for( uint8_t bit = 0 ; IO_NUMBERS > bit ; bit++ )
+		{
+			//----	button  -------------------------------
+			//
+			if( uiAdr & uiMask )
+			{
+				m_arToggle[ idx ].m_usTobbleButtonIdx = bit;
+			}
+
+			//----	outputs  ------------------------------
+			//
+			if( uiHelper & uiMask )
+			{
+				if( bFirst )
+				{
+					m_arToggle[ idx ].m_usFirstOutput = bit;
+				}
+				else
+				{
+					m_arToggle[ idx ].m_usSecondOutput = bit;
+				}
+			}
+
+			uiMask <<= 1;
+		}
+
+		//-------------------------------------------------
+		//	get toggle address
+		//
+		uiHelper	= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_ADR );
+		uiAdr		= uiHelper / 10;
+
+		m_arToggle[ idx ].m_uiToggleAddress	= uiAdr;
+		m_arToggle[ idx ].m_usToggleFlags	= uiHelper - (uiAdr * 10);
+
+		//-------------------------------------------------
+		//	get enable address
+		//
+		uiHelper		= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_ENABLE );
+		uiAdr		= uiHelper / 10;
+
+		m_arToggle[ idx ].m_uiEnableAddress	= uiAdr;
+		m_arToggle[ idx ].m_usEnableFlags	= uiHelper - (uiAdr * 10);
+
+		//---------------------------------------------------------
+		//	next toggle block
+		//
+		usLncv += 5;
+	}
 
 	LocoNet.init( LOCONET_TX_PIN );
 }
@@ -233,6 +309,7 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 	uint16_t	ioAddress		= 0;
 	uint16_t	mask			= 0x0001;
 	uint8_t		usInfo			= 0;
+	uint8_t		idx;
 	bool		bFound;
 
 	//--------------------------------------------------------------
@@ -246,8 +323,9 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 	}
 
 	//--------------------------------------------------------------
-	//	
-	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )
+	//	check if there is a message for an I/O
+	//
+	for( idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
 		bFound = false;
 
@@ -346,6 +424,78 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 		}	//	if( asOutputs & mask )
 
 		mask <<= 1;
+	}
+
+	//-----------------------------------------------------
+	//	check if there is a message for the toggle func
+	//
+	for( idx = 0 ; TOGGLE_OPTIONS > idx ; idx++ )
+	{
+		bool	bIsSensor;
+		bool	bIsGreen;
+		bool	bState;
+
+		//---------------------------------------------
+		//	toggel
+		//
+		if( m_arToggle[ idx ].m_bToggleEnabled )
+		{
+			ioAddress	= m_arToggle[ idx ].m_uiToggleAddress;
+			usInfo		= m_arToggle[ idx ].m_usToggleFlags;
+			bIsSensor	= (0 != (usInfo & CONFIG_SENSOR));
+
+			if(	(0 < ioAddress) && (uiAdr == ioAddress) )
+			{
+				if(		( bIsSensor && (NT_Sensor  == type))
+					||	(!bIsSensor && (NT_Request == type)) )
+				{
+					if( SWITCH_GREEN == usDirClosed )
+					{
+						bIsGreen = ((usInfo & CONFIG_ACTIVE_GREEN) ? true : false );
+					}
+					else
+					{
+						bIsGreen = ((usInfo & CONFIG_ACTIVE_GREEN) ? false : true );
+					}
+
+					if( bIsGreen )
+					{
+						//----	toggle first output  ----------
+						//
+						bState = g_clControl.IsOutputSet( m_arToggle[ idx ].m_usFirstOutput );
+						g_clControl.SetOutput( m_arToggle[ idx ].m_usFirstOutput, !bState );
+
+						//----	toggle second output  ---------
+						//
+						bState = g_clControl.IsOutputSet( m_arToggle[ idx ].m_usSecondOutput );
+						g_clControl.SetOutput( m_arToggle[ idx ].m_usSecondOutput, !bState );
+					}
+				}
+			}
+		}
+
+		//---------------------------------------------
+		//	enable
+		//
+		ioAddress	= m_arToggle[ idx ].m_uiEnableAddress;
+		usInfo		= m_arToggle[ idx ].m_usEnableFlags;
+		bIsSensor	= (0 != (usInfo & CONFIG_SENSOR));
+
+		if(	(0 < ioAddress) && (uiAdr == ioAddress) )
+		{
+			if(		( bIsSensor && (NT_Sensor  == type))
+				||	(!bIsSensor && (NT_Request == type)) )
+			{
+				if( SWITCH_GREEN == usDirClosed )
+				{
+					m_arToggle[ idx ].m_bToggleEnabled = ((usInfo & CONFIG_ACTIVE_GREEN) ? true : false );
+				}
+				else
+				{
+					m_arToggle[ idx ].m_bToggleEnabled = ((usInfo & CONFIG_ACTIVE_GREEN) ? false : true );
+				}
+			}
+		}
 	}
 }
 
