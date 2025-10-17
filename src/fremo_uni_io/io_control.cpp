@@ -62,6 +62,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		vom: 17.10.2025
+//#
+//#	Implementation:
+//#		-	add a 'one button toggle' functionallity
+//#			new function
+//#				IsOutputSet()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		vom: 12.09.2025
 //#
 //#	Implementation:
@@ -909,7 +918,7 @@ bool IO_ControlClass::IsInputSet( uint8_t usIOPin )
 //	IsOutputSet
 //------------------------------------------------------------------
 //
-bool IO_ControlClass::IsOutputSet( int8_t usIOPin )
+bool IO_ControlClass::IsOutputSet( uint8_t usIOPin )
 {
 	return( my_bit_is_set( *g_arPorts[ usIOPin ], g_arPortPins[ usIOPin ] ) );
 }

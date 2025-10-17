@@ -7,6 +7,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	9		vom: 17.10.2025
+//#
+//#	Implementation:
+//#		-	add one button toggle functionallity
+//#			change in function
+//#				Init()
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	8		vom: 07.10.2025
 //#
 //#	Implementation:
@@ -141,7 +151,7 @@
 //
 #define TOGGLE_FUNC_BUTTON		0
 #define TOGGLE_FUNC_ADR			1
-#define TOGGLE_FUNC_ENABLE		2
+#define TOGGLE_FUNC_DISABLE		2
 #define TOGGLE_FUNC_IO			3
 
 
@@ -181,6 +191,18 @@ MyLoconetClass::MyLoconetClass()
 	m_uiAdrSendStatus	= 0x0000;
 	m_bIsProgMode		= false;
 	m_bIsProgMode		= false;
+
+	for( uint8_t idx ; TOGGLE_OPTIONS > idx ; idx++ )
+	{
+		m_arToggle[ idx ].m_usToggleButtonIdx	= 0;
+		m_arToggle[ idx ].m_uiToggleAddress		= 0;
+		m_arToggle[ idx ].m_uiDisableAddress	= 0;
+		m_arToggle[ idx ].m_usToggleFlags		= 0;
+		m_arToggle[ idx ].m_usDisableFlags		= 0;
+		m_arToggle[ idx ].m_usFirstOutput		= 0;
+		m_arToggle[ idx ].m_usSecondOutput		= 0;
+		m_arToggle[ idx ].m_bToggleDisabled		= false;
+	}
 }
 
 
@@ -208,19 +230,13 @@ void MyLoconetClass::Init( void )
 		//	get output and button idx
 		//
 		bool	bFirst	= true;
-		uiAdr			= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_BUTTON );
-		uiHelper		= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_IO );
-		uiMask			= 0x0001;
+
+		m_arToggle[ idx ].m_usToggleButtonIdx	= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_BUTTON );
+		uiHelper								= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_IO );
+		uiMask									= 0x0001;
 
 		for( uint8_t bit = 0 ; IO_NUMBERS > bit ; bit++ )
 		{
-			//----	button  -------------------------------
-			//
-			if( uiAdr & uiMask )
-			{
-				m_arToggle[ idx ].m_usTobbleButtonIdx = bit;
-			}
-
 			//----	outputs  ------------------------------
 			//
 			if( uiHelper & uiMask )
@@ -248,13 +264,13 @@ void MyLoconetClass::Init( void )
 		m_arToggle[ idx ].m_usToggleFlags	= uiHelper - (uiAdr * 10);
 
 		//-------------------------------------------------
-		//	get enable address
+		//	get disable address
 		//
-		uiHelper		= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_ENABLE );
+		uiHelper	= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_DISABLE );
 		uiAdr		= uiHelper / 10;
 
-		m_arToggle[ idx ].m_uiEnableAddress	= uiAdr;
-		m_arToggle[ idx ].m_usEnableFlags	= uiHelper - (uiAdr * 10);
+		m_arToggle[ idx ].m_uiDisableAddress	= uiAdr;
+		m_arToggle[ idx ].m_usDisableFlags		= uiHelper - (uiAdr * 10);
 
 		//---------------------------------------------------------
 		//	next toggle block
@@ -438,7 +454,7 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 		//---------------------------------------------
 		//	toggel
 		//
-		if( m_arToggle[ idx ].m_bToggleEnabled )
+		if( !m_arToggle[ idx ].m_bToggleDisabled )
 		{
 			ioAddress	= m_arToggle[ idx ].m_uiToggleAddress;
 			usInfo		= m_arToggle[ idx ].m_usToggleFlags;
@@ -475,10 +491,10 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 		}
 
 		//---------------------------------------------
-		//	enable
+		//	disable
 		//
-		ioAddress	= m_arToggle[ idx ].m_uiEnableAddress;
-		usInfo		= m_arToggle[ idx ].m_usEnableFlags;
+		ioAddress	= m_arToggle[ idx ].m_uiDisableAddress;
+		usInfo		= m_arToggle[ idx ].m_usDisableFlags;
 		bIsSensor	= (0 != (usInfo & CONFIG_SENSOR));
 
 		if(	(0 < ioAddress) && (uiAdr == ioAddress) )
@@ -488,11 +504,11 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 			{
 				if( SWITCH_GREEN == usDirClosed )
 				{
-					m_arToggle[ idx ].m_bToggleEnabled = ((usInfo & CONFIG_ACTIVE_GREEN) ? true : false );
+					m_arToggle[ idx ].m_bToggleDisabled = ((usInfo & CONFIG_ACTIVE_GREEN) ? true : false );
 				}
 				else
 				{
-					m_arToggle[ idx ].m_bToggleEnabled = ((usInfo & CONFIG_ACTIVE_GREEN) ? false : true );
+					m_arToggle[ idx ].m_bToggleDisabled = ((usInfo & CONFIG_ACTIVE_GREEN) ? false : true );
 				}
 			}
 		}

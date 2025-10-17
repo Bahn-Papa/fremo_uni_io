@@ -11,6 +11,23 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	11		vom: 17.10.2025
+//#
+//#	Implementation:
+//#		-	add a 'one button toggle' functionallity
+//#			new definitions
+//#				TOGGLE_OPTIONS
+//#				LNCV_ADR_INITIAL_OUTPUT_STATE
+//#				LNCV_ADR_FIRST_TOGGLE_ADDRESS
+//#				LNCV_ADR_LAST_TOGGLE_ADDRESS
+//#			new functions
+//#				GetInitialOutputState()
+//#			change in function
+//#				CheckEEPROM()
+//#				IsValidLNCVAddress()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	10		vom: 24.09.2025
 //#
 //#	Implementation:
@@ -178,7 +195,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 {
 	uint16_t	uiAddress	= ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
 	uint16_t	uiArticle	= ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
-	uint8_t		idx			= LNCV_ADR_LAST_DELAY_ADDRESS;
+	uint8_t		idx			= LNCV_ADR_LAST_TOGGLE_ADDRESS;
 
 
 #ifdef DEBUGGING_PRINTOUT

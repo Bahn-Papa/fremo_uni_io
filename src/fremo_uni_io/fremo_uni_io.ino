@@ -24,7 +24,7 @@
 //	The main version is defined by PLATINE_VERSION (compile_options.h)
 //
 //#define VERSION_MAIN	1
-#define	VERSION_MINOR	8
+#define	VERSION_MINOR	9
 #define VERSION_HOTFIX	0
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
@@ -33,6 +33,20 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.09.00		from: 17.10.2025
+//#
+//#	Implementation:
+//#		-	add a 'one button toggle' functionallity
+//#			changes in files
+//#				lncv_storage.h, lncv_storage.cpp
+//#				my_loconet.h, my_loconet.cpp
+//#				io_control.h, io_control.cpp
+//#			change in functions
+//#				setup()
+//#				loop()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -340,6 +354,34 @@ void CheckLnStateAndSetOutputs( uint16_t uiNewLnState )
 //
 void CheckAndHandleToggleFunc( uint8_t inputIdx, uint8_t bOn )
 {
+	toggle_t *	pToggle;
+	uint8_t		usButtonIdx;
+	bool		bState;
+
+	for( uint8_t idx = 0 ; TOGGLE_OPTIONS > idx ; idx++ )
+	{
+		pToggle		= g_clMyLoconet.GetToggleConfig( idx );
+		usButtonIdx	= pToggle->m_usToggleButtonIdx;
+
+		if( (0 < usButtonIdx) && ((usButtonIdx - 1) == inputIdx) )
+		{
+			if( !pToggle->m_bToggleDisabled )
+			{
+				if( bOn )
+				{
+					//----	toggle first output  ----------
+					//
+					bState = g_clControl.IsOutputSet( pToggle->m_usFirstOutput );
+					g_clControl.SetOutput( pToggle->m_usFirstOutput, !bState );
+
+					//----	toggle second output  ---------
+					//
+					bState = g_clControl.IsOutputSet( pToggle->m_usSecondOutput );
+					g_clControl.SetOutput( pToggle->m_usSecondOutput, !bState );
+				}
+			}
+		}
+	}
 }
 
 
@@ -725,7 +767,21 @@ void setup()
 	delay( 500 );
 	
 	g_clControl.GreenLedOff();
-	
+
+	//----	set default outputs  ---------------------------------------
+	uint16_t	uiDefaultOutputs	= g_clLncvStorage.ReadLNCV( LNCV_ADR_INITIAL_OUTPUT_STATE );
+	uint16_t	uiMask				= 0x0001;
+
+	for( uint8_t idx ; IO_NUMBERS > idx ; idx++ )
+	{
+		if( uiDefaultOutputs & uiMask )
+		{
+			g_clControl.SetOutput( idx, true );
+		}
+
+		uiMask <<= 1;
+	}
+
 	//----	Show Configuration  ----------------------------------------
 #ifdef DEBUGGING_PRINTOUT
 	g_clDebugging.PrintTitle( PLATINE_VERSION, VERSION_MINOR, VERSION_HOTFIX );

@@ -9,6 +9,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	4		vom: 17.10.2025
+//#
+//#	Implementation:
+//#		-	add one button toggle functionallity
+//#			new structure
+//#				toggle_t
+//#			new member variable
+//#				m_arToggle
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	3		vom: 18.11.2023
 //#
 //#	Implementation:
@@ -62,14 +73,13 @@
 typedef struct
 {
 	uint16_t	m_uiToggleAddress;
-	uint16_t	m_uiEnableAddress;
+	uint16_t	m_uiDisableAddress;
 	uint8_t		m_usFirstOutput;
 	uint8_t		m_usSecondOutput;
 	uint8_t		m_usToggleFlags;
-	uint8_t		m_usEnableFlags;
-	uint8_t		m_usTobbleButtonIdx;
-	bool		m_bTogglePressed;
-	bool		m_bToggleEnabled;
+	uint8_t		m_usDisableFlags;
+	uint8_t		m_usToggleButtonIdx;
+	bool		m_bToggleDisabled;
 
 } toggle_t;
 
