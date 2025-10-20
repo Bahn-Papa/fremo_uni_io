@@ -25,7 +25,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	9
-#define VERSION_HOTFIX	0
+#define VERSION_HOTFIX	1
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -33,6 +33,15 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.09.01		from: 20.10.2025
+//#
+//#	Implementation:
+//#		-	add check of configuration
+//#			changes in file
+//#				my_loconet.cpp
 //#
 //#-------------------------------------------------------------------------
 //#

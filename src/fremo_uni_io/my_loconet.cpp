@@ -7,6 +7,17 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	10		vom: 20.10.2025
+//#
+//#	Implementation:
+//#		-	add check of configuration
+//#			if inputs and outputs are mixed up between normal I/O and
+//#			one button functions than the red led will flash
+//#			change in function
+//#				Init()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	9		vom: 17.10.2025
 //#
 //#	Implementation:
@@ -212,7 +223,8 @@ MyLoconetClass::MyLoconetClass()
 //
 void MyLoconetClass::Init( void )
 {
-	uint8_t		usLncv	= LNCV_ADR_FIRST_TOGGLE_ADDRESS;
+	uint16_t	uiAsInput	= g_clLncvStorage.GetAsInputs();
+	uint8_t		usLncv		= LNCV_ADR_FIRST_TOGGLE_ADDRESS;
 
 
 	g_uiArticleNumber	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
@@ -235,23 +247,34 @@ void MyLoconetClass::Init( void )
 		uiHelper								= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_IO );
 		uiMask									= 0x0001;
 
-		for( uint8_t bit = 0 ; IO_NUMBERS > bit ; bit++ )
+		if( 	(0 != (uiAsInput & uiHelper))
+			||	(0 == (uiAsInput & (1 << m_arToggle[ idx ].m_usToggleButtonIdx))) )
 		{
-			//----	outputs  ------------------------------
-			//
-			if( uiHelper & uiMask )
-			{
-				if( bFirst )
-				{
-					m_arToggle[ idx ].m_usFirstOutput = bit;
-				}
-				else
-				{
-					m_arToggle[ idx ].m_usSecondOutput = bit;
-				}
-			}
+			m_arToggle[ idx ].m_bToggleDisabled		= true;
+			m_arToggle[ idx ].m_usToggleButtonIdx	= 0;
 
-			uiMask <<= 1;
+			g_clControl.RedLedFlash();
+		}
+		else
+		{
+			for( uint8_t bit = 0 ; IO_NUMBERS > bit ; bit++ )
+			{
+				//----	outputs  ------------------------------
+				//
+				if( uiHelper & uiMask )
+				{
+					if( bFirst )
+					{
+						m_arToggle[ idx ].m_usFirstOutput = bit;
+					}
+					else
+					{
+						m_arToggle[ idx ].m_usSecondOutput = bit;
+					}
+				}
+
+				uiMask <<= 1;
+			}
 		}
 
 		//-------------------------------------------------
