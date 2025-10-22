@@ -203,7 +203,7 @@ MyLoconetClass::MyLoconetClass()
 	m_bIsProgMode		= false;
 	m_bIsProgMode		= false;
 
-	for( uint8_t idx ; TOGGLE_OPTIONS > idx ; idx++ )
+	for( uint8_t idx = 0 ; TOGGLE_OPTIONS > idx ; idx++ )
 	{
 		m_arToggle[ idx ].m_usToggleButtonIdx	= 0;
 		m_arToggle[ idx ].m_uiToggleAddress		= 0;

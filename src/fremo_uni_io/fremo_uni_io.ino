@@ -25,7 +25,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	9
-#define VERSION_HOTFIX	1
+#define VERSION_HOTFIX	2
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -33,6 +33,15 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.09.02		from: 22.10.2025
+//#
+//#	Bug Fix:
+//#		-	forgot to initialize the index in a for loop
+//#			changes in file
+//#				my_loconet.cpp
 //#
 //#-------------------------------------------------------------------------
 //#
