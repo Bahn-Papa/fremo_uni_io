@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	11		vom: 23.10.2025
+//#
+//#	Bug Fix:
+//#		-	correction of one button function configuration
+//#			change in function
+//#				Init()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	10		vom: 20.10.2025
 //#
 //#	Implementation:
@@ -248,7 +257,7 @@ void MyLoconetClass::Init( void )
 		uiMask									= 0x0001;
 
 		if( 	(0 != (uiAsInput & uiHelper))
-			||	(0 == (uiAsInput & (1 << m_arToggle[ idx ].m_usToggleButtonIdx))) )
+			||	(0 == (uiAsInput & (1 << (m_arToggle[ idx ].m_usToggleButtonIdx - 1)))) )
 		{
 			m_arToggle[ idx ].m_bToggleDisabled		= true;
 			m_arToggle[ idx ].m_usToggleButtonIdx	= 0;
@@ -266,6 +275,7 @@ void MyLoconetClass::Init( void )
 					if( bFirst )
 					{
 						m_arToggle[ idx ].m_usFirstOutput = bit;
+						bFirst = false;
 					}
 					else
 					{
@@ -300,6 +310,8 @@ void MyLoconetClass::Init( void )
 		//
 		usLncv += 5;
 	}
+
+	m_uiOutputStatus = g_clLncvStorage.ReadLNCV( LNCV_ADR_INITIAL_OUTPUT_STATE );
 
 	LocoNet.init( LOCONET_TX_PIN );
 }
@@ -488,7 +500,7 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 				if(		( bIsSensor && (NT_Sensor  == type))
 					||	(!bIsSensor && (NT_Request == type)) )
 				{
-					if( SWITCH_GREEN == usDirClosed )
+					if( SWITCH_RED != usDirClosed )
 					{
 						bIsGreen = ((usInfo & CONFIG_ACTIVE_GREEN) ? true : false );
 					}

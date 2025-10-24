@@ -25,7 +25,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	9
-#define VERSION_HOTFIX	2
+#define VERSION_HOTFIX	3
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -33,6 +33,15 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.09.03		from: 23.10.2025
+//#
+//#	Bug Fix:
+//#		-	correction of one button function configuration
+//#			changes in file
+//#				my_loconet.cpp
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -787,18 +796,18 @@ void setup()
 	g_clControl.GreenLedOff();
 
 	//----	set default outputs  ---------------------------------------
-	uint16_t	uiDefaultOutputs	= g_clLncvStorage.ReadLNCV( LNCV_ADR_INITIAL_OUTPUT_STATE );
-	uint16_t	uiMask				= 0x0001;
-
-	for( uint8_t idx ; IO_NUMBERS > idx ; idx++ )
-	{
-		if( uiDefaultOutputs & uiMask )
-		{
-			g_clControl.SetOutput( idx, true );
-		}
-
-		uiMask <<= 1;
-	}
+// 	uint16_t	uiDefaultOutputs	= g_clLncvStorage.ReadLNCV( LNCV_ADR_INITIAL_OUTPUT_STATE );
+// 	uint16_t	uiMask				= 0x0001;
+// 
+// 	for( uint8_t idx = 0 ; IO_NUMBERS > idx ; idx++ )
+// 	{
+// 		if( uiDefaultOutputs & uiMask )
+// 		{
+// 			g_clControl.SetOutput( idx, true );
+// 		}
+// 
+// 		uiMask <<= 1;
+// 	}
 
 	//----	Show Configuration  ----------------------------------------
 #ifdef DEBUGGING_PRINTOUT
