@@ -14,6 +14,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	9		vom: 24.10.2025
+//#
+//#	Bug Fix:
+//#		-	correction of LNCV_ADR_LAST_TOGGLE_ADDRESS
+//#			the definition is set to '69' now
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	8		vom: 17.10.2025
 //#
 //#	Implementation:
@@ -133,7 +141,7 @@
 #define LNCV_ADR_LAST_DELAY_ADDRESS		46
 
 #define LNCV_ADR_FIRST_TOGGLE_ADDRESS	50
-#define LNCV_ADR_LAST_TOGGLE_ADDRESS	59
+#define LNCV_ADR_LAST_TOGGLE_ADDRESS	69
 
 //----------------------------------------------------------------------
 //	LNCV configuration masks

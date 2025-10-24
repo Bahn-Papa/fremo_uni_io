@@ -7,6 +7,21 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	12		vom: 24.10.2025
+//#
+//#	Bug Fix:
+//#		-	add setting of the initial states for the outputs
+//#			change in function
+//#				Init()
+//#		-	correction of toggle output handling
+//#			new function
+//#				CheckAndHandleToggleFunc()
+//#			change in function
+//#				Init()
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	11		vom: 23.10.2025
 //#
 //#	Bug Fix:
@@ -210,7 +225,7 @@ MyLoconetClass::MyLoconetClass()
 	m_uiOutputStatus	= 0x0000;
 	m_uiAdrSendStatus	= 0x0000;
 	m_bIsProgMode		= false;
-	m_bIsProgMode		= false;
+	m_bSendStatus		= false;
 
 	for( uint8_t idx = 0 ; TOGGLE_OPTIONS > idx ; idx++ )
 	{
@@ -219,8 +234,7 @@ MyLoconetClass::MyLoconetClass()
 		m_arToggle[ idx ].m_uiDisableAddress	= 0;
 		m_arToggle[ idx ].m_usToggleFlags		= 0;
 		m_arToggle[ idx ].m_usDisableFlags		= 0;
-		m_arToggle[ idx ].m_usFirstOutput		= 0;
-		m_arToggle[ idx ].m_usSecondOutput		= 0;
+		m_arToggle[ idx ].m_uiToggleMask		= 0;
 		m_arToggle[ idx ].m_bToggleDisabled		= false;
 	}
 }
@@ -245,46 +259,28 @@ void MyLoconetClass::Init( void )
 	{
 		uint16_t	uiHelper;
 		uint16_t	uiAdr;
-		uint16_t	uiMask;
+		uint8_t		usButtonIdx;
 
 		//-------------------------------------------------
 		//	get output and button idx
 		//
 		bool	bFirst	= true;
 
-		m_arToggle[ idx ].m_usToggleButtonIdx	= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_BUTTON );
-		uiHelper								= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_IO );
-		uiMask									= 0x0001;
+		usButtonIdx	= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_BUTTON );
+		uiHelper	= g_clLncvStorage.ReadLNCV( usLncv + TOGGLE_FUNC_IO );
 
 		if( 	(0 != (uiAsInput & uiHelper))
-			||	(0 == (uiAsInput & (1 << (m_arToggle[ idx ].m_usToggleButtonIdx - 1)))) )
+			||	(0 == (uiAsInput & (1 << (usButtonIdx - 1)))) )
 		{
 			m_arToggle[ idx ].m_bToggleDisabled		= true;
-			m_arToggle[ idx ].m_usToggleButtonIdx	= 0;
 
 			g_clControl.RedLedFlash();
 		}
 		else
 		{
-			for( uint8_t bit = 0 ; IO_NUMBERS > bit ; bit++ )
-			{
-				//----	outputs  ------------------------------
-				//
-				if( uiHelper & uiMask )
-				{
-					if( bFirst )
-					{
-						m_arToggle[ idx ].m_usFirstOutput = bit;
-						bFirst = false;
-					}
-					else
-					{
-						m_arToggle[ idx ].m_usSecondOutput = bit;
-					}
-				}
-
-				uiMask <<= 1;
-			}
+			m_arToggle[ idx ].m_bToggleDisabled		= false;
+			m_arToggle[ idx ].m_usToggleButtonIdx	= usButtonIdx;
+			m_arToggle[ idx ].m_uiToggleMask		= uiHelper;
 		}
 
 		//-------------------------------------------------
@@ -311,15 +307,17 @@ void MyLoconetClass::Init( void )
 		usLncv += 5;
 	}
 
-	m_uiOutputStatus = g_clLncvStorage.ReadLNCV( LNCV_ADR_INITIAL_OUTPUT_STATE );
+	//----	set initial outputs  ---------------------------------------
+	m_uiOutputStatus = g_clLncvStorage.GetInitialOutputState();
 
+	//----	start loconet communication  -------------------------------
 	LocoNet.init( LOCONET_TX_PIN );
 }
 
 
-//******************************************************************
+//**************************************************************************
 //	CheckForAndHandleMessage
-//------------------------------------------------------------------
+//--------------------------------------------------------------------------
 //
 bool MyLoconetClass::CheckForMessage( void )
 {
@@ -336,6 +334,31 @@ bool MyLoconetClass::CheckForMessage( void )
 	}
 
 	return( m_bSendStatus );
+}
+
+
+//**************************************************************************
+//	CheckAndHandleToggleFunc
+//--------------------------------------------------------------------------
+//
+void MyLoconetClass::CheckAndHandleToggleFunc( uint8_t usInputIdx )
+{
+	uint8_t		usButtonIdx;
+
+	for( uint8_t idx = 0 ; TOGGLE_OPTIONS > idx ; idx++ )
+	{
+		if( !m_arToggle[ idx ].m_bToggleDisabled )
+		{
+			usButtonIdx	= m_arToggle[ idx ].m_usToggleButtonIdx;
+
+			if( (0 < usButtonIdx) && ((usButtonIdx - 1) == usInputIdx) )
+			{
+				//----	toggle outputs  ----------------------------
+				//
+				m_uiOutputStatus ^= m_arToggle[ idx ].m_uiToggleMask;
+			}
+		}
+	}
 }
 
 
@@ -491,12 +514,13 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 		//
 		if( !m_arToggle[ idx ].m_bToggleDisabled )
 		{
-			ioAddress	= m_arToggle[ idx ].m_uiToggleAddress;
-			usInfo		= m_arToggle[ idx ].m_usToggleFlags;
-			bIsSensor	= (0 != (usInfo & CONFIG_SENSOR));
+			ioAddress = m_arToggle[ idx ].m_uiToggleAddress;
 
 			if(	(0 < ioAddress) && (uiAdr == ioAddress) )
 			{
+				usInfo		= m_arToggle[ idx ].m_usToggleFlags;
+				bIsSensor	= (0 != (usInfo & CONFIG_SENSOR));
+
 				if(		( bIsSensor && (NT_Sensor  == type))
 					||	(!bIsSensor && (NT_Request == type)) )
 				{
@@ -511,15 +535,9 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 
 					if( bIsGreen )
 					{
-						//----	toggle first output  ----------
+						//----	toggle outputs  --------------------
 						//
-						bState = g_clControl.IsOutputSet( m_arToggle[ idx ].m_usFirstOutput );
-						g_clControl.SetOutput( m_arToggle[ idx ].m_usFirstOutput, !bState );
-
-						//----	toggle second output  ---------
-						//
-						bState = g_clControl.IsOutputSet( m_arToggle[ idx ].m_usSecondOutput );
-						g_clControl.SetOutput( m_arToggle[ idx ].m_usSecondOutput, !bState );
+						m_uiOutputStatus ^= m_arToggle[ idx ].m_uiToggleMask;
 					}
 				}
 			}
@@ -528,12 +546,13 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 		//---------------------------------------------
 		//	disable
 		//
-		ioAddress	= m_arToggle[ idx ].m_uiDisableAddress;
-		usInfo		= m_arToggle[ idx ].m_usDisableFlags;
-		bIsSensor	= (0 != (usInfo & CONFIG_SENSOR));
+		ioAddress = m_arToggle[ idx ].m_uiDisableAddress;
 
 		if(	(0 < ioAddress) && (uiAdr == ioAddress) )
 		{
+			usInfo		= m_arToggle[ idx ].m_usDisableFlags;
+			bIsSensor	= (0 != (usInfo & CONFIG_SENSOR));
+
 			if(		( bIsSensor && (NT_Sensor  == type))
 				||	(!bIsSensor && (NT_Request == type)) )
 			{

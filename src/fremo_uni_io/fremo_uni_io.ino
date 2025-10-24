@@ -25,7 +25,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	9
-#define VERSION_HOTFIX	3
+#define VERSION_HOTFIX	4
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -33,6 +33,21 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.09.04		from: 24.10.2025
+//#
+//#	Bug Fix:
+//#		-	add setting of the initial states for the outputs
+//#		-	correction of LNCV_ADR_LAST_TOGGLE_ADDRESS
+//#		-	correction of toggle output handling
+//#			changes in files
+//#				my_loconet.h, my_loconet.cpp
+//#				lncv_storage.h
+//#			changes in function
+//#				setup()
+//#				CheckToSendIOState()
 //#
 //#-------------------------------------------------------------------------
 //#
@@ -375,44 +390,6 @@ void CheckLnStateAndSetOutputs( uint16_t uiNewLnState )
 
 
 //**************************************************************************
-//	CheckAndHandleToggleFunc
-//--------------------------------------------------------------------------
-//	The function collects the actual IO state and returns it.
-//
-void CheckAndHandleToggleFunc( uint8_t inputIdx, uint8_t bOn )
-{
-	toggle_t *	pToggle;
-	uint8_t		usButtonIdx;
-	bool		bState;
-
-	for( uint8_t idx = 0 ; TOGGLE_OPTIONS > idx ; idx++ )
-	{
-		pToggle		= g_clMyLoconet.GetToggleConfig( idx );
-		usButtonIdx	= pToggle->m_usToggleButtonIdx;
-
-		if( (0 < usButtonIdx) && ((usButtonIdx - 1) == inputIdx) )
-		{
-			if( !pToggle->m_bToggleDisabled )
-			{
-				if( bOn )
-				{
-					//----	toggle first output  ----------
-					//
-					bState = g_clControl.IsOutputSet( pToggle->m_usFirstOutput );
-					g_clControl.SetOutput( pToggle->m_usFirstOutput, !bState );
-
-					//----	toggle second output  ---------
-					//
-					bState = g_clControl.IsOutputSet( pToggle->m_usSecondOutput );
-					g_clControl.SetOutput( pToggle->m_usSecondOutput, !bState );
-				}
-			}
-		}
-	}
-}
-
-
-//**************************************************************************
 //	GetIOState
 //--------------------------------------------------------------------------
 //	The function collects the actual IO state and returns it.
@@ -624,7 +601,10 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 				{
 					bDoSendLnMsg = true;
 
-					CheckAndHandleToggleFunc( idx, usInfo );
+					if( 0 != usInfo )
+					{
+						g_clMyLoconet.CheckAndHandleToggleFunc( idx );
+					}
 				}
 
 				//--------------------------------------------------
@@ -795,19 +775,6 @@ void setup()
 	
 	g_clControl.GreenLedOff();
 
-	//----	set default outputs  ---------------------------------------
-// 	uint16_t	uiDefaultOutputs	= g_clLncvStorage.ReadLNCV( LNCV_ADR_INITIAL_OUTPUT_STATE );
-// 	uint16_t	uiMask				= 0x0001;
-// 
-// 	for( uint8_t idx = 0 ; IO_NUMBERS > idx ; idx++ )
-// 	{
-// 		if( uiDefaultOutputs & uiMask )
-// 		{
-// 			g_clControl.SetOutput( idx, true );
-// 		}
-// 
-// 		uiMask <<= 1;
-// 	}
 
 	//----	Show Configuration  ----------------------------------------
 #ifdef DEBUGGING_PRINTOUT

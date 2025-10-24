@@ -9,6 +9,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	5		vom: 24.10.2025
+//#
+//#	Bug Fix:
+//#		-	correction of toggle output handling
+//#			new function
+//#				CheckAndHandleToggleFunc()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	4		vom: 17.10.2025
 //#
 //#	Implementation:
@@ -74,8 +83,7 @@ typedef struct
 {
 	uint16_t	m_uiToggleAddress;
 	uint16_t	m_uiDisableAddress;
-	uint8_t		m_usFirstOutput;
-	uint8_t		m_usSecondOutput;
+	uint16_t	m_uiToggleMask;
 	uint8_t		m_usToggleFlags;
 	uint8_t		m_usDisableFlags;
 	uint8_t		m_usToggleButtonIdx;
@@ -105,6 +113,7 @@ class MyLoconetClass
 		bool CheckForMessage( void );
 		void LoconetReceived( notify_type_t type, uint16_t uiAdr, uint8_t usDirClosed, uint8_t usOutputThrown );
 		void SendMessage( notify_type_t type, uint16_t uiAdr, uint8_t usDirClosed, uint8_t usOutputThrown );
+		void CheckAndHandleToggleFunc( uint8_t usInputIdx );
 
 		inline uint16_t GetOutputStatus( void )
 		{
