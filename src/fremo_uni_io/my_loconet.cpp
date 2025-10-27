@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	13		vom: 27.10.2025
+//#
+//#	Bug Fix:
+//#		-	detection of disable message improved
+//#			change in function
+//#				LoconetReceived()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	12		vom: 24.10.2025
 //#
 //#	Bug Fix:
@@ -172,7 +181,7 @@
 #define LOCONET_TX_PIN			7
 
 //----------------------------------------------------------------------
-//	configuration masks
+//	command direction values
 //
 #define SWITCH_RED				0
 #define SWITCH_THROWN			SWITCH_RED
@@ -556,7 +565,7 @@ void MyLoconetClass::LoconetReceived(	notify_type_t	type,
 			if(		( bIsSensor && (NT_Sensor  == type))
 				||	(!bIsSensor && (NT_Request == type)) )
 			{
-				if( SWITCH_GREEN == usDirClosed )
+				if( SWITCH_RED != usDirClosed )
 				{
 					m_arToggle[ idx ].m_bToggleDisabled = ((usInfo & CONFIG_ACTIVE_GREEN) ? true : false );
 				}

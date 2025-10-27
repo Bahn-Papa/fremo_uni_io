@@ -25,7 +25,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	9
-#define VERSION_HOTFIX	4
+#define VERSION_HOTFIX	5
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -33,6 +33,15 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.09.05		from: 27.10.2025
+//#
+//#	Bug Fix:
+//#		-	detection of disable message improved
+//#			changes in file
+//#				my_loconet.cpp
 //#
 //#-------------------------------------------------------------------------
 //#
