@@ -25,7 +25,7 @@
 //
 //#define VERSION_MAIN	1
 #define	VERSION_MINOR	9
-#define VERSION_HOTFIX	5
+#define VERSION_HOTFIX	6
 
 #define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
 
@@ -33,6 +33,15 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	x.09.06		from: 05.11.2025
+//#
+//#	Bug Fix:
+//#		-	write the default config if article number is not identical
+//#			change in file
+//#				lncv_storage.cpp
 //#
 //#-------------------------------------------------------------------------
 //#

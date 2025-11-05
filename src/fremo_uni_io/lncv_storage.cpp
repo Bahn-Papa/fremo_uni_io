@@ -11,6 +11,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	12		vom: 05.11.2025
+//#
+//#	Bug Fix:
+//#		-	write the default config if article number is not identical
+//#			change in function
+//#				CheckEEPROM()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	11		vom: 17.10.2025
 //#
 //#	Implementation:
@@ -202,10 +211,14 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 	g_clDebugging.PrintStorageCheck( uiAddress, uiArticle );
 #endif
 
-	if( (0xFFFF == uiAddress) || (0x0000 == uiAddress) )
+	if(		(0xFFFF == uiAddress)
+		||	(0x0000 == uiAddress)
+		||	(ARTIKEL_NUMMER != uiArticle)	)
 	{
 		//----------------------------------------------------------
-		//	the EEPROM is empty, so write default config info ...
+		//	the EEPROM is empty or has a configuration for
+		//	a different article,
+		//	so write default config info ...
 		//
 
 #ifdef DEBUGGING_PRINTOUT
