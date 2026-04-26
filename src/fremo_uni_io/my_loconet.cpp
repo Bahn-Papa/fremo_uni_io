@@ -7,6 +7,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	14		from: 22.04.2026
+//#
+//#	Implementation:
+//#		-	switch to firmware update over loconet
+//#			change in function
+//#				CheckForMessage()
+//#			new function
+//#				notifyFirmwareUpdate()
+//#		-	change of definition for article number
+//#			old:	LNCV_ADR_ARTICLE_NUMBER
+//#			new:	LNCV_ADR_ARTICLE_NUMBER
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	13		vom: 27.10.2025
 //#
 //#	Bug Fix:
@@ -157,19 +171,18 @@
 //
 //==========================================================================
 
-#include "compile_options.h"
-
 #include <Arduino.h>
 #include <LocoNet.h>
 
+#include "version_info.h"
+#include "lncv_storage.h"
+#include "io_control.h"
+#include "my_loconet.h"
+#include "firmware_update_msg.h"
 
 #ifdef DEBUGGING_PRINTOUT
 #include "debugging.h"
 #endif
-
-#include "lncv_storage.h"
-#include "io_control.h"
-#include "my_loconet.h"
 
 
 //==========================================================================
@@ -212,6 +225,8 @@ lnMsg			*g_pLnPacket;
 
 uint16_t		 g_uiArticleNumber;
 uint16_t		 g_uiModuleAddress;
+
+FirmwareUpdateMessage g_clFirmwareUpdate = FirmwareUpdateMessage();
 
 
 //==========================================================================
@@ -259,7 +274,7 @@ void MyLoconetClass::Init( void )
 	uint8_t		usLncv		= LNCV_ADR_FIRST_TOGGLE_ADDRESS;
 
 
-	g_uiArticleNumber	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
+	g_uiArticleNumber	= g_clLncvStorage.ReadLNCV( LNCV_ADR_ARTICLE_NUMBER );
 	g_uiModuleAddress	= g_clLncvStorage.ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
 
 	m_uiAdrSendStatus	= g_clLncvStorage.ReadLNCV( LNCV_ADR_SEND_STATUS );
@@ -338,7 +353,10 @@ bool MyLoconetClass::CheckForMessage( void )
 	{
 		if( !LocoNet.processSwitchSensorMessage( g_pLnPacket ) )
 		{
-			g_clLNCV.processLNCVMessage( g_pLnPacket );
+			if( !g_clLNCV.processLNCVMessage( g_pLnPacket ) )
+			{
+				g_clFirmwareUpdate.processMessage( g_pLnPacket );
+			}
 		}
 	}
 
@@ -649,6 +667,18 @@ void MyLoconetClass::SendMessage( notify_type_t type, uint16_t uiAdr, uint8_t us
 
 
 //**********************************************************************
+//	notifyFirmwareUpdate
+//----------------------------------------------------------------------
+//
+void notifyFirmwareUpdate()
+{
+	g_clControl.RedLedOn();
+
+	FirmwareUpdateMessage::enterBootloader();
+}
+
+
+//**********************************************************************
 //
 void notifySensor( uint16_t Address, uint8_t State )
 {
@@ -835,7 +865,7 @@ int8_t notifyLNCVwrite( uint16_t ArtNr, uint16_t Address, uint16_t Value )
 		if( g_clLncvStorage.IsValidLNCVAddress( Address ) )
 		{
 			if(		(LNCV_ADR_VERSION_NUMBER != Address)
-				&&	(LNCV_ADR_ARTIKEL_NUMMER != Address) )
+				&&	(LNCV_ADR_ARTICLE_NUMBER != Address) )
 			{
 				g_clLncvStorage.WriteLNCV( Address, Value );
 

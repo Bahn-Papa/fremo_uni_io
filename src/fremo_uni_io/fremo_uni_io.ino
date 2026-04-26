@@ -17,286 +17,6 @@
 //#
 //##########################################################################
 
-#include "compile_options.h"
-
-
-//----------------------------------------------------------------------
-//	The main version is defined by PLATINE_VERSION (compile_options.h)
-//
-//#define VERSION_MAIN	1
-#define	VERSION_MINOR	9
-#define VERSION_HOTFIX	6
-
-#define VERSION_NUMBER		((PLATINE_VERSION * 10000) + (VERSION_MINOR * 100) + VERSION_HOTFIX)
-
-
-//##########################################################################
-//#
-//#		Version History:
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.09.06		from: 05.11.2025
-//#
-//#	Bug Fix:
-//#		-	write the default config if article number is not identical
-//#			change in file
-//#				lncv_storage.cpp
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.09.05		from: 27.10.2025
-//#
-//#	Bug Fix:
-//#		-	detection of disable message improved
-//#			changes in file
-//#				my_loconet.cpp
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.09.04		from: 24.10.2025
-//#
-//#	Bug Fix:
-//#		-	add setting of the initial states for the outputs
-//#		-	correction of LNCV_ADR_LAST_TOGGLE_ADDRESS
-//#		-	correction of toggle output handling
-//#			changes in files
-//#				my_loconet.h, my_loconet.cpp
-//#				lncv_storage.h
-//#			changes in function
-//#				setup()
-//#				CheckToSendIOState()
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.09.03		from: 23.10.2025
-//#
-//#	Bug Fix:
-//#		-	correction of one button function configuration
-//#			changes in file
-//#				my_loconet.cpp
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.09.02		from: 22.10.2025
-//#
-//#	Bug Fix:
-//#		-	forgot to initialize the index in a for loop
-//#			changes in file
-//#				my_loconet.cpp
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.09.01		from: 20.10.2025
-//#
-//#	Implementation:
-//#		-	add check of configuration
-//#			changes in file
-//#				my_loconet.cpp
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.09.00		from: 17.10.2025
-//#
-//#	Implementation:
-//#		-	add a 'one button toggle' functionallity
-//#			changes in files
-//#				lncv_storage.h, lncv_storage.cpp
-//#				my_loconet.h, my_loconet.cpp
-//#				io_control.h, io_control.cpp
-//#			change in functions
-//#				setup()
-//#				loop()
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.08.00		from: 07.10.2025
-//#
-//#	Implementation:
-//#		-	change the handling of the signal way from input to
-//#			loconet message
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.07.02		from: 07.02.2024
-//#
-//#	Bug Fix:
-//#		-	changed position of paramters for NT_Report messages
-//#			change in function
-//#				CheckToSendIOState()
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.07.01		from: 07.02.2024
-//#
-//#	Bug Fix:
-//#		-	new evaluation if a loconet message should be send
-//#			parameters for messages of type NT_Report were evaluated the
-//#			wrong way
-//#			change in function
-//#				CheckToSendIOState()
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.07.00		from: 18.11.2023
-//#
-//#	Implementation:
-//#		-	avoid missunderstanding, so rename
-//#			clMyLoconet.GetInputStatus()	=>	clMyLoconet.GetOutputStatus()
-//#		-	add address to send the status of all inputs
-//#			change in function
-//#				loop()
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.06.02		from: 03.11.2023
-//#
-//#	Bug Fix:
-//#		-	change in handling of ModuleAddress and Article Number
-//#			in module my_loconet
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.06.01		from: 03.11.2023
-//#
-//#	Implementation:
-//#		-	changes in handling of msg types
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version:	x.05.01		from: 04.06.2023
-//#
-//#	Bug Fix:
-//#		-	do not go into prog mode when a discover msg was detected
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: x.05.00	vom: 05.02.2023
-//#
-//#	Implementation:
-//#		-	add support for board version 4
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: x.04.00	vom: 04.02.2023
-//#
-//#	Implementation:
-//#		-	change debug text and info for switch/sensor messages
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: x.03.05	vom: 29.01.2023
-//#
-//#	Bug Fix:
-//#		-	now correct interpreting of the configuration
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: x.03.04	vom: 29.01.2023
-//#
-//#	Bug Fix:
-//#		-	change in interpreting the configuration
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: x.03.03	vom: 29.01.2023
-//#
-//#	Implementation:
-//#		-	add function to print the configuration
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: x.03.02	vom: 27.01.2023
-//#
-//#	Implementation:
-//#		-	add version number to EEPROM
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: 1.03.01	vom: 09.11.2022
-//#
-//#	Bug Fix:
-//#		-	in function 'WriteLNCV()' Address was not declared
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: 1.03.00	vom: 06.11.2022
-//#
-//#	Implementation:
-//#		-	add one address for multiple I/Os
-//#			up to now there was only one address for one I/O possible
-//#		-	only write to EEPROM if the new value is different
-//#			than the old one
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: 1.02.00	vom: 19.07.2022
-//#
-//#	Implementation:
-//#		-	new configuration method:
-//#			address, input, output, switch, sensor, green and red
-//#         is configured in one word.
-//#         The word has the following format:
-//#			xxxx m	-	xxxx	address
-//#						m		mode
-//#								0	-	output switch msg RED   (0) active
-//#								1	-	output switch msg GREEN (1) active
-//#								2	-	output sensor LOW  (0) active
-//#								3	-	output sensor HIGH (1) active
-//#								4	-	input  switch msg RED   (0) active
-//#								5	-	input  switch msg GREEN (1) active
-//#								6	-	input  sensor LOW  (0) active
-//#								7	-	input  sensor HIGH (1) active
-//#         output means: lissening on Loconet and set IO pins
-//#         input  means: check state of IO pins and send loconet msg
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: 1.01.00	vom: 18.02.2022
-//#
-//#	Implementation:
-//#		-	add IO pin off delay timer (0 ms up to 65535 ms)
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: 1.00.00	vom: 18.02.2022
-//#
-//#	Implementation:
-//#		-	add some comments an explanations
-//#		-	all test were good, so set version to 1.0.0
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: 0.09.02	vom: 16.02.2022
-//#
-//#	Bugfix:
-//#		-	mismatch of input and output state corrected
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: 0.09.01	vom: 15.02.2022
-//#
-//#	Implementation:
-//#		-	remove the check for 'send only input messages' in function
-//#			'SendMessage()', because this check is performed elsewhere
-//#		-	add function GetAsInputs()
-//#			the function will return a bit mask where each '1' bit
-//#			stands for an input
-//#
-//#	Bugfix:
-//#		-	correction of initial state in function 'setup()'
-//#		-	handled messages for inputs instead for outputs in function
-//#			'LoconetReceived()'. This bug is fixed now
-//#
-//#-------------------------------------------------------------------------
-//#
-//#	Version: 0.09.00	vom: 14.02.2022
-//#
-//#	Implementation:
-//#		-	first working version
-//#
-//##########################################################################
-
 
 //==========================================================================
 //
@@ -304,13 +24,14 @@
 //
 //==========================================================================
 
-#ifdef DEBUGGING_PRINTOUT
-#include "debugging.h"
-#endif
-
+#include "version_info.h"
 #include "io_control.h"
 #include "lncv_storage.h"
 #include "my_loconet.h"
+
+#ifdef DEBUGGING_PRINTOUT
+#include "debugging.h"
+#endif
 
 
 //==========================================================================
@@ -741,7 +462,7 @@ void setup()
 #ifdef DEBUGGING_PRINTOUT
 	g_clDebugging.Init();
 
-	g_clDebugging.PrintTitle( PLATINE_VERSION, VERSION_MINOR, VERSION_HOTFIX );
+	g_clDebugging.PrintTitle( ARTICLE_NUMBER, VERSION_MAIN, VERSION_MINOR );
 	g_clDebugging.PrintInfoLine( infoLineInit );
 #endif
 
@@ -796,7 +517,7 @@ void setup()
 
 	//----	Show Configuration  ----------------------------------------
 #ifdef DEBUGGING_PRINTOUT
-	g_clDebugging.PrintTitle( PLATINE_VERSION, VERSION_MINOR, VERSION_HOTFIX );
+	g_clDebugging.PrintTitle( ARTICLE_NUMBER, VERSION_MAIN, VERSION_MINOR );
 	g_clDebugging.PrintStorageConfig(	g_clLncvStorage.GetAsOutputs(),
 										g_clLncvStorage.GetAsSensor(),
 										g_clLncvStorage.GetIsLowActive()	);
@@ -806,7 +527,7 @@ void setup()
 
 	//----	Prepare Display  -------------------------------------------
 #ifdef DEBUGGING_PRINTOUT
-	g_clDebugging.PrintTitle( PLATINE_VERSION, VERSION_MINOR, VERSION_HOTFIX );
+	g_clDebugging.PrintTitle( ARTICLE_NUMBER, VERSION_MAIN, VERSION_MINOR );
 	g_clDebugging.PrintInfoLine( infoLineFields );
 #endif
 

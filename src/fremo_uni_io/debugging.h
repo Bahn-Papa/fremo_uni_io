@@ -10,6 +10,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		vom: 22.04.2026
+//#
+//#	Implementation:
+//#		-	change in handling of version number
+//#			change in function
+//#				PrintTitle()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		vom: 03.11.2023
 //#
 //#	Implementation:
@@ -92,9 +101,9 @@ class DebuggingClass
 
 		void Init( void );
 
-		void PrintTitle(	uint8_t versionMain,
-							uint8_t versionMinor,
-							uint8_t versionHotFix );
+		void PrintTitle(	uint16_t uiArticleNumber,
+							uint8_t usVersionMain,
+							uint8_t usVersionMinor );
 		void PrintInfoLine( info_lines_t number );
 
 		void PrintNotifyType( notify_type_t type );

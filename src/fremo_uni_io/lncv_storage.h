@@ -14,6 +14,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	10		from: 22.04.2026
+//#
+//#	Implementation:
+//#		-	change of definition for article number
+//#			old:	LNCV_ADR_ARTIKEL_NUMMER
+//#			new:	LNCV_ADR_ARTICLE_NUMBER
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	9		vom: 24.10.2025
 //#
 //#	Bug Fix:
@@ -106,8 +115,6 @@
 //
 //==========================================================================
 
-#include "compile_options.h"
-
 
 //==========================================================================
 //
@@ -120,15 +127,10 @@
 
 
 //----------------------------------------------------------------------
-//	my artikle number
-#define ARTIKEL_NUMMER	1512
-
-
-//----------------------------------------------------------------------
 //	address definitions for config informations
 //
 #define LNCV_ADR_MODULE_ADDRESS			0
-#define LNCV_ADR_ARTIKEL_NUMMER			1
+#define LNCV_ADR_ARTICLE_NUMBER			1
 #define LNCV_ADR_VERSION_NUMBER			2
 #define LNCV_ADR_SWITCH_AS_REPORT		3
 #define LNCV_ADR_SEND_DELAY				4

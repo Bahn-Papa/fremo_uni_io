@@ -7,6 +7,23 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	6		vom: 22.04.2026
+//#
+//#	Implementation:
+//#		-	change in handling of version number
+//#			change in function
+//#				PrintTitle()
+//#			the display will show the following title where
+//#				aaaa	is the article number
+//#				 xxx	is the main version number
+//#				  yy	is the minor version number
+//#
+//#			 S                     1 1 1 1 1 1
+//#			Z  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+//#			0    A a a a a     V x x x . y y
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	5		vom: 03.11.2023
 //#
 //#	Implementation:
@@ -86,7 +103,7 @@
 //
 //==========================================================================
 
-#include "compile_options.h"
+#include "version_info.h"
 
 
 #ifdef DEBUGGING_PRINTOUT
@@ -214,14 +231,14 @@ void DebuggingClass::Init( void )
 //	PrintTitle
 //------------------------------------------------------------------
 //
-void DebuggingClass::PrintTitle(	uint8_t versionMain,
-									uint8_t versionMinor,
-									uint8_t versionHotFix )
+void DebuggingClass::PrintTitle(	uint16_t uiArticleNumber,
+									uint8_t usVersionMain,
+									uint8_t usVersionMinor		)
 {
 	g_clDisplay.Clear();
 	g_clDisplay.SetInverseFont( true );
-	sprintf(	g_chDebugString, "  Uni V%u.%02u.%02u  ",
-				versionMain, versionMinor, versionHotFix );
+	sprintf(	g_chDebugString, " A%4u  V%3u.%02u ",
+				uiArticleNumber, usVersionMain, usVersionMinor );
 	g_clDisplay.Print( g_chDebugString );
 	g_clDisplay.SetInverseFont( false );
 }

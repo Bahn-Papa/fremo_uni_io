@@ -62,6 +62,13 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	7		vom: 22.04.2026
+//#
+//#	Implementation:
+//#		-	change definition from PLATINE_VERSION to ARTICLE_NUMBER
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	6		vom: 17.10.2025
 //#
 //#	Implementation:
@@ -123,10 +130,9 @@
 //
 //==========================================================================
 
-#include "compile_options.h"
-
 #include <Arduino.h>
 
+#include "version_info.h"
 #include "io_control.h"
 #include "debounce.h"
 
@@ -176,7 +182,7 @@ uint8_t GetKeyStatePortF( uint8_t usMask );
 //	PB6, OC1B	I/O (SV1.5)		I/O (SV1.5)
 //	PB7, OC1C	I/O (SV2.6)		I/O (SV2.6)
 //
-#if PLATINE_VERSION == 1
+#if ARTICLE_NUMBER == 1
 
 	#define LED_GREEN		_BV( PB0 )
 
@@ -304,7 +310,7 @@ typedef uint8_t (*func_ptr_t)( uint8_t );
 //	this array contains the mapping	universal pin numbering to
 //	pin of port
 //
-#if PLATINE_VERSION == 4
+#if ARTICLE_NUMBER == 1512
 
 	uint8_t	g_arPortPins[ IO_NUMBERS ] =
 	{
@@ -354,7 +360,7 @@ typedef uint8_t (*func_ptr_t)( uint8_t );
 //	this array contains the mapping universal pin numbering to
 //	address of variable containing the input mask of a port
 //
-#if PLATINE_VERSION == 4
+#if ARTICLE_NUMBER == 1512
 
 	volatile uint8_t * g_arInputMasks[ IO_NUMBERS ] =
 	{
@@ -404,7 +410,7 @@ typedef uint8_t (*func_ptr_t)( uint8_t );
 //	this array contains the mapping universal pin numbering to
 //	address of variable containing the low active mask of a port
 //
-#if PLATINE_VERSION == 4
+#if ARTICLE_NUMBER == 1512
 
 	volatile uint8_t * g_arLowActiveMasks[ IO_NUMBERS ] =
 	{
@@ -454,7 +460,7 @@ typedef uint8_t (*func_ptr_t)( uint8_t );
 //	this array contains the mapping universal pin numbering to
 //	address of variable containing the output mask of a port
 //
-#if PLATINE_VERSION == 4
+#if ARTICLE_NUMBER == 1512
 
 	volatile uint8_t * g_arOutputMasks[ IO_NUMBERS ] =
 	{
@@ -504,7 +510,7 @@ typedef uint8_t (*func_ptr_t)( uint8_t );
 //	this array contains the mapping universal pin numbering to
 //	address of function for reading the inputs of a port
 //
-#if PLATINE_VERSION == 4
+#if ARTICLE_NUMBER == 1512
 
 	func_ptr_t	g_arFunctions[ IO_NUMBERS ] =
 	{
@@ -554,7 +560,7 @@ typedef uint8_t (*func_ptr_t)( uint8_t );
 //	this array contains the mapping universal pin numbering to
 //	address of port to set an output
 //
-#if PLATINE_VERSION == 4
+#if ARTICLE_NUMBER == 1512
 
 	volatile uint8_t * g_arPorts[ IO_NUMBERS ] =
 	{
@@ -728,7 +734,7 @@ void IO_ControlClass::Init( uint16_t uiOutputs, uint16_t uiLowActive )
 		g_clPortB.SetLowActiveMask( g_usPortBLowActive );
 	}
 
-#if PLATINE_VERSION == 1
+#if ARTICLE_NUMBER == 1
 
 	DDRB	|=  (g_usPortBOutputs | LED_GREEN | LED_RED);	//	configure as Output
 	PORTB	&= ~(g_usPortBOutputs | LED_GREEN | LED_RED);	//	switch off

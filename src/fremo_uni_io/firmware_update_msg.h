@@ -1,12 +1,12 @@
 //##########################################################################
 //#
-//#		FirmwareUpdateMessage.h
+//#		firmware_update_msg.h
 //#
 //#	Description
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	2		from: 01.04.2026
+//#	File Version:	2		from: 22.04.2026
 //#
 //#	Implementation:
 //#		-	add header file 'version_info.h' to get the the ARCTICLE_NUMBER
@@ -22,8 +22,8 @@
 //##########################################################################
 
 
-#ifndef FirmwareUpdateMessage_h
-#define FirmwareUpdateMessage_h
+#ifndef __FIRMWARE_UPDATE_MSG_H__
+#define __FIRMWARE_UPDATE_MSG_H__
 
 
 //==========================================================================
@@ -90,4 +90,4 @@ extern void notifyFirmwareUpdate() __attribute__((weak));
 
 //==========================================================================
 
-#endif
+#endif	//	__FIRMWARE_UPDATE_MSG_H__

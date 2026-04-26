@@ -12,6 +12,14 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	3		vom: 22.04.2026
+//#
+//#	Implementation:
+//#		-	change handling of version number and article number
+//#			removed 'compile_options.h'
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	2		vom: 24.09.2025
 //#
 //#	Implementation:
@@ -37,8 +45,6 @@
 //		I N C L U D E S
 //
 //==========================================================================
-
-#include "compile_options.h"
 
 #include <stdint.h>
 

@@ -11,6 +11,18 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	13		from: 22.04.2026
+//#
+//#	Implementation:
+//#		-	change of definition for article number
+//#			old:	LNCV_ADR_ARTIKEL_NUMMER
+//#			new:	LNCV_ADR_ARTICLE_NUMBER
+//#			change in functions
+//#				Init()
+//#				CheckEEPROM()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	12		vom: 05.11.2025
 //#
 //#	Bug Fix:
@@ -149,8 +161,7 @@
 
 #include <Arduino.h>
 
-#include "compile_options.h"
-
+#include "version_info.h"
 #include "lncv_storage.h"
 
 #ifdef DEBUGGING_PRINTOUT
@@ -203,7 +214,7 @@ LncvStorageClass::LncvStorageClass()
 void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 {
 	uint16_t	uiAddress	= ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
-	uint16_t	uiArticle	= ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
+	uint16_t	uiArticle	= ReadLNCV( LNCV_ADR_ARTICLE_NUMBER );
 	uint8_t		idx			= LNCV_ADR_LAST_TOGGLE_ADDRESS;
 
 
@@ -211,9 +222,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 	g_clDebugging.PrintStorageCheck( uiAddress, uiArticle );
 #endif
 
-	if(		(0xFFFF == uiAddress)
-		||	(0x0000 == uiAddress)
-		||	(ARTIKEL_NUMMER != uiArticle)	)
+	if( ARTICLE_NUMBER != uiArticle )
 	{
 		//----------------------------------------------------------
 		//	the EEPROM is empty or has a configuration for
@@ -226,7 +235,7 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 #endif
 
 		WriteLNCV( LNCV_ADR_MODULE_ADDRESS, 0x0001 );				//	Module Adress 0x0001
-		WriteLNCV( LNCV_ADR_ARTIKEL_NUMMER,	ARTIKEL_NUMMER );		//	Artikel-Nummer
+		WriteLNCV( LNCV_ADR_ARTICLE_NUMBER,	ARTICLE_NUMBER );		//	Artikel-Nummer
 		WriteLNCV( LNCV_ADR_VERSION_NUMBER, uiVersionNumber );		//	Version Number
 
 		WriteLNCV( LNCV_ADR_SWITCH_AS_REPORT, 0 );					//	no switch reports
@@ -269,7 +278,7 @@ void LncvStorageClass::Init( void )
 	//--------------------------------------------------------------
 	//	read config information
 	//
-	m_uiArticleNumber	= ReadLNCV( LNCV_ADR_ARTIKEL_NUMMER );
+	m_uiArticleNumber	= ReadLNCV( LNCV_ADR_ARTICLE_NUMBER );
 	m_uiModuleAddress	= ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
 	m_uiSwitchReport	= ReadLNCV( LNCV_ADR_SWITCH_AS_REPORT );
 	m_uiOutputs			= 0x0000;
