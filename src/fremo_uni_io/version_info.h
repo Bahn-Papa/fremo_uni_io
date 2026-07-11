@@ -90,7 +90,7 @@
 //----------------------------------------------------------------------
 //	version number
 //
-#define VERSION_MAIN			10
+#define VERSION_MAIN			11
 #define	VERSION_MINOR			0
 
 #define VERSION_NUMBER			((VERSION_MAIN * 100) + VERSION_MINOR)
@@ -109,11 +109,34 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	Version:	11.00		from: 06.06.2026
+//#
+//#	Implementation:
+//#		-	add new LNCVs to configure
+//#			-	single loconet message
+//#			-	state to send (RED or GREEN)
+//#			changed files
+//#				fremo_uni_io.ino
+//#				lncv_storage.cpp, lncv_storage.h
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	10.01		from: 05.06.2026
+//#
+//#	Implementation:
+//#		-	add a configurable delay time between OUTPUT ON and
+//#			OUTPUT OFF in a switch message
+//#			changed files
+//#				lncv_storage.cpp, lncv_storage.h
+//#				my_loconet.cpp
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	Version:	10.00		from: 22.04.2026
 //#
 //#	Implementation:
 //#		-	change handling of version number and article number
-//#			change in files
+//#			changed files
 //#				fremo_uni_io.ino
 //#				lncv_storage.cpp
 //#				io_control.cpp, io_control.h

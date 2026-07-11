@@ -14,6 +14,32 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	15		from: 06.06.2026
+//#
+//#	Implementation:
+//#		-	add an LNCV to disable the sending of a loconet message when
+//#			an input goes to the normal level
+//#			new member variable
+//#				m_uiSendRed
+//#				m_uiSingleMessage
+//#			new function
+//#				GetSendRed()
+//#				GetSingleMessage()
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	11		from: 05.06.2026
+//#
+//#	Implementation:
+//#		-	add a configurable delay time between OUTPUT ON and
+//#			OUTPUT OFF in a switch message
+//#			new member variable
+//#				m_uiSwitchOutputDelay
+//#			new function
+//#				GetSwitchOutputDelay()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	10		from: 22.04.2026
 //#
 //#	Implementation:
@@ -136,6 +162,9 @@
 #define LNCV_ADR_SEND_DELAY				4
 #define LNCV_ADR_SEND_STATUS			5
 #define LNCV_ADR_INITIAL_OUTPUT_STATE	6
+#define LNCV_ADR_SWITCH_OUTPUT_DELAY	7
+#define LNCV_ADR_SINGLE_MESSAGE			8
+#define LNCV_ADR_SEND_RED				9
 
 #define LNCV_ADR_FIRST_IO_ADDRESS		11
 #define LNCV_ADR_LAST_IO_ADDRESS		26
@@ -231,6 +260,27 @@ class LncvStorageClass
 
 		//----------------------------------------------------------
 		//
+		inline uint16_t	GetSwitchOutputDelay( void )
+		{
+			return( m_uiSwitchOutputDelay );
+		};
+
+		//----------------------------------------------------------
+		//
+		inline uint16_t	GetSendRed( void )
+		{
+			return( m_uiSendRed );
+		};
+
+		//----------------------------------------------------------
+		//
+		inline uint16_t	GetSingleMessage( void )
+		{
+			return( m_uiSingleMessage );
+		};
+
+		//----------------------------------------------------------
+		//
 		inline uint16_t	GetIOAddress( uint8_t idx )
 		{
 			uint16_t	uiAddress = 0;
@@ -266,6 +316,9 @@ class LncvStorageClass
 		uint16_t	m_uiOutputs;
 		uint16_t	m_uiSensors;
 		uint16_t	m_uiLowActive;
+		uint16_t	m_uiSwitchOutputDelay;
+		uint16_t	m_uiSingleMessage;
+		uint16_t	m_uiSendRed;
 		uint16_t	m_aruiAddress[  IO_NUMBERS ];
 		uint16_t	m_aruiOffDelay[ IO_NUMBERS ];
 };

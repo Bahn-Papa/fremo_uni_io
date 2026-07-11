@@ -282,6 +282,9 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 	uint16_t		asInputs		= g_clLncvStorage.GetAsInputs();
 	uint16_t		asSensor		= g_clLncvStorage.GetAsSensor();
 	uint16_t		asReport		= g_clLncvStorage.GetAsReport();
+	uint16_t		isLowActive		= g_clLncvStorage.GetIsLowActive();
+	uint16_t		uiSingleMessage	= g_clLncvStorage.GetSingleMessage();
+	uint16_t		uiSendRed		= g_clLncvStorage.GetSendRed();
 	uint16_t		uiAddress		= 0;
 	uint8_t			usInfo;
 	uint8_t			usOutputThrown	= 0;
@@ -323,13 +326,38 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 				//--------------------------------------------------
 				//	prepare the bit info
 				//
-				if( uiNewIOState & uiMask )
+				if( asReport & uiMask )
 				{
-					usInfo = 1;
+					if( uiNewIOState & uiMask )
+					{
+						usInfo = 1;
+					}
+					else
+					{
+						usInfo = 0;
+					}
 				}
 				else
 				{
-					usInfo = 0;
+					if( uiNewIOState & uiMask )
+					{
+						if( uiSendRed & uiMask )
+						{
+							usInfo = 0;
+						}
+						else
+						{
+							usInfo = 1;
+						}
+					}
+					else if( uiSendRed & uiMask )
+					{
+						usInfo = 1;
+					}
+					else
+					{
+						usInfo = 0;
+					}
 				}
 
 				//--------------------------------------------------
@@ -407,6 +435,20 @@ void CheckToSendIOState( uint16_t uiNewIOState )
 					type = NT_Request;
 				}
 
+				//----------------------------------------------
+				//	check if this message is allowed to be send
+				//
+				if( uiSingleMessage & uiMask )
+				{
+					if( 0 == (uiNewIOState & uiMask) )
+					{
+						bDoSendLnMsg = false;
+					}
+				}
+
+				//----------------------------------------------
+				//	if allowed, send message
+				//
 				if( bDoSendLnMsg )
 				{
 					//------------------------------------------
@@ -479,7 +521,8 @@ void setup()
 	uiIsLowActive	= g_clLncvStorage.GetIsLowActive();
 
 	//----	other inits  -----------------------------------------------
-	g_clControl.Init( uiAsOutput, uiIsLowActive );
+//	g_clControl.Init( uiAsOutput, uiIsLowActive );
+	g_clControl.Init( uiAsOutput, 0x0000 );
 	g_clMyLoconet.Init();
 
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )

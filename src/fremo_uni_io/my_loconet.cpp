@@ -7,6 +7,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	15		from: 05.06.2026
+//#
+//#	Implementation:
+//#		-	add a configurable delay time between OUTPUT ON and
+//#			OUTPUT OFF in a switch message
+//#			changes in functions
+//#				SendMessage()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	14		from: 22.04.2026
 //#
 //#	Implementation:
@@ -630,7 +640,7 @@ void MyLoconetClass::SendMessage( notify_type_t type, uint16_t uiAdr, uint8_t us
 
 			//----	wait befor sending the next message  -----------
 			//
-			delay( g_clLncvStorage.GetSendDelayTime() );
+			delay( g_clLncvStorage.GetSwitchOutputDelay() );
 
 			LocoNet.requestSwitch( uiAdr, 0, usDirClosed );
 		}

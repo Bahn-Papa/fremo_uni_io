@@ -11,6 +11,36 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	15		from: 06.06.2026
+//#
+//#	Implementation:
+//#		-	add an LNCV to disable the sending of a loconet message when
+//#			an input goes to the normal level
+//#			new member variable
+//#				m_uiSingleMessage
+//#			new function
+//#				GetSingleMessage()
+//#			changes in functions
+//#				Init()
+//#				CheckEEPROM()
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	14		from: 05.06.2026
+//#
+//#	Implementation:
+//#		-	add a configurable delay time between OUTPUT ON and
+//#			OUTPUT OFF in a switch message
+//#			new member variable
+//#				m_uiSwitchOutputDelay
+//#			new function
+//#				GetSwitchOutputDelay()
+//#			changes in functions
+//#				Init()
+//#				CheckEEPROM()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	13		from: 22.04.2026
 //#
 //#	Implementation:
@@ -222,7 +252,9 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 	g_clDebugging.PrintStorageCheck( uiAddress, uiArticle );
 #endif
 
-	if( ARTICLE_NUMBER != uiArticle )
+	if(		(0x0000 == uiAddress)
+		||	(0xFFFF == uiAddress)
+		||	(ARTICLE_NUMBER != uiArticle) )
 	{
 		//----------------------------------------------------------
 		//	the EEPROM is empty or has a configuration for
@@ -238,13 +270,18 @@ void LncvStorageClass::CheckEEPROM( uint16_t uiVersionNumber )
 		WriteLNCV( LNCV_ADR_ARTICLE_NUMBER,	ARTICLE_NUMBER );		//	Artikel-Nummer
 		WriteLNCV( LNCV_ADR_VERSION_NUMBER, uiVersionNumber );		//	Version Number
 
-		WriteLNCV( LNCV_ADR_SWITCH_AS_REPORT, 0 );					//	no switch reports
-		WriteLNCV( LNCV_ADR_SEND_DELAY, DEFAULT_SEND_DELAY_TIME );	//	Send Delay Timer
+		WriteLNCV( LNCV_ADR_SWITCH_AS_REPORT, 0 );								//	no switch reports
+		WriteLNCV( LNCV_ADR_SEND_DELAY, DEFAULT_SEND_DELAY_TIME );				//	Send Delay Time
+		WriteLNCV( LNCV_ADR_SEND_STATUS, 0 );									//	no adr defined to send the status
+		WriteLNCV( LNCV_ADR_INITIAL_OUTPUT_STATE, 0 );							//	no adr defined to send the initial output state of all outputs
+		WriteLNCV( LNCV_ADR_SWITCH_OUTPUT_DELAY, DEFAULT_SEND_DELAY_TIME );		//	Switch Output Delay Time
+		WriteLNCV( LNCV_ADR_SINGLE_MESSAGE, 0x0000 );							//	Single Message OFF
+		WriteLNCV( LNCV_ADR_SEND_RED, 0x0000 );									//	send GREEN (default)
 		
 		//----------------------------------------------------------
 		//	set all I/O addresses and delay times to '0'
 		//
-		while( LNCV_ADR_SEND_DELAY < idx )
+		while( LNCV_ADR_SEND_RED < idx )
 		{
 			WriteLNCV( idx, 0 );
 			idx--;
@@ -281,9 +318,22 @@ void LncvStorageClass::Init( void )
 	m_uiArticleNumber	= ReadLNCV( LNCV_ADR_ARTICLE_NUMBER );
 	m_uiModuleAddress	= ReadLNCV( LNCV_ADR_MODULE_ADDRESS );
 	m_uiSwitchReport	= ReadLNCV( LNCV_ADR_SWITCH_AS_REPORT );
+	m_uiSingleMessage	= ReadLNCV( LNCV_ADR_SINGLE_MESSAGE );
+	m_uiSendRed			= ReadLNCV( LNCV_ADR_SEND_RED );
 	m_uiOutputs			= 0x0000;
 	m_uiSensors			= 0x0000;
 	m_uiLowActive		= 0x0000;
+
+	//--------------------------------------------------------------
+	//	read switch output delay time
+	//	and make sure it is not shorter than MIN_SEND_DELAY_TIME ms
+	//
+	m_uiSwitchOutputDelay = ReadLNCV( LNCV_ADR_SWITCH_OUTPUT_DELAY );
+
+	if( MIN_SEND_DELAY_TIME > m_uiSwitchOutputDelay )
+	{
+		m_uiSwitchOutputDelay = MIN_SEND_DELAY_TIME;
+	}
 
 	//--------------------------------------------------------------
 	//	read send delay time
