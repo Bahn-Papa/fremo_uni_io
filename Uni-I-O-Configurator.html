@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<title>Universal I/O Konfigurator</title>
+
+	<style>
+		.container {
+			width: 1000px;
+			height: 80px;
+			text-align: center;
+		}
+
+		.box {
+			width: 300px;
+			height: 50px;
+			padding-top: 15px;
+			margin-left: 50px;
+			margin-right: 50px;
+			display: inline-block;
+		}
+
+		.filebox {
+			width: 400px;
+		}
+
+		.gridbox {
+			display: grid;
+			grid-auto-flow: row dense;
+			grid-gap: 5px;
+			grid-template-columns: auto auto;
+		}
+
+		.lncvbox {
+			background-color: #90d050;
+		}
+
+		.nodetails {
+			padding-left: 22px;
+		}
+
+		.content {
+			padding-left: 16px;
+		}
+
+		#reset {
+			font-size: 18px;
+		}
+
+		summary {
+			font-weight: bold;
+		}
+		
+		thead tr th {
+			font-size: 14px;
+		}
+
+		td, th {
+			padding: 5px;
+		}
+
+		tr {
+			background-color: #ffe699;
+		}
+
+		th:nth-child( even ) { 
+			background-color: #fff2cc; 
+		}
+
+		td:nth-child( even ) { 
+			background-color: #fff2cc; 
+		}
+
+		td:first-child {
+			font-weight: bold;
+			text-align: center;
+		}
+
+		#lncvtable input[ type="number" ] {
+			background-color: #90d050;
+			font-size: 12px;
+			padding: 4px;
+		}
+
+		#lncvtable input[ type="number" ]:focus {
+			background-color: white;
+		}
+
+		.detailstable {
+			width: 100%;
+			padding-left: 16px;
+			padding-right: 16px;
+		}
+
+		.detailstable tr {
+			background-color: #fce4d6
+		}
+
+		.detailstable tr:nth-child( odd ) { 
+			background-color: #f8cbad
+		}
+
+		img {
+			width: 14px;
+			height: 14px;
+		}
+	</style>
+
+	<script type="text/javascript">
+
+		//------------------------------------------------------------------
+		//	global variables
+		//
+		var gLncvCount	= 70;
+		var gLncvPerRow	= 10;
+		var gIOCount	= 16;
+
+		//------------------------------------------------------------------
+		//	function:	dualRadioBtn
+		//
+		function dualRadioBtn( oParent, id1, text1, value1, id2, text2, value2, selected, func1, func2 )
+		{
+			const oMyDiv	= document.createElement( 'div' );
+
+			const oInput1	= document.createElement( 'input' );
+			oInput1.type	= "radio";
+			oInput1.name	= id1 + id2;
+			oInput1.value	= value1;
+			oInput1.id		= id1;
+			
+			if( func1 )
+			{
+				oInput1.setAttribute( "onChange", func1 );
+			}
+
+			const oLable1		= document.createElement( 'label' );
+			oLable1.id			= "lbl" + id1;
+			oLable1.for			= id1;
+			oLable1.textContent	= text1;
+
+			oMyDiv.appendChild( oInput1 );
+			oMyDiv.appendChild( oLable1 );
+
+			oMyDiv.appendChild( document.createElement( 'br' ) );
+
+			const oInput2	= document.createElement( 'input' );
+			oInput2.type	= "radio";
+			oInput2.name	= id1 + id2;
+			oInput2.value	= value2;
+			oInput2.id		= id2;
+			
+			if( func2 )
+			{
+				oInput2.setAttribute( "onChange", func2 );
+			}
+
+			const oLable2		= document.createElement( 'label' );
+			oLable2.id			= "lbl" + id2;
+			oLable2.for			= id2;
+			oLable2.textContent	= text2;
+
+			oMyDiv.appendChild( oInput2 );
+			oMyDiv.appendChild( oLable2 );
+
+			if( selected == id1 )
+			{
+				oInput1.checked	= true;
+			}
+			else
+			{
+				oInput2.checked	= true;
+			}
+
+			oParent.appendChild( oMyDiv );
+			
+			return( oMyDiv );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function dualRadioBtnEnable( id1, id2, bEnable )
+		{
+			var oRadio1	= document.getElementById( id1 );
+			var oLable1	= document.getElementById( "lbl" + id1 );
+			var oRadio2 = document.getElementById( id2 );
+			var oLable2	= document.getElementById( "lbl" + id1 );
+			
+			if( bEnable )
+			{
+				oRadio1.disabled = 0;
+				oLable1.readonly = 0;
+				oRadio2.disabled = 0;
+				oLable2.readonly = 0;
+			}
+			else
+			{
+				oRadio1.setAttribute( "disabled", true );
+				oLable1.setAttribute( "readonly", true );
+				oRadio2.setAttribute( "disabled", true );
+				oLable2.setAttribute( "readonly", true );
+			}
+		}
+
+		//------------------------------------------------------------------
+		//
+		function setIn( ioId )
+		{
+			var numId			= parseInt( ioId.substr( 2 ) );
+			var oActHighGreen	= document.getElementById( "lblinhigh"	+ numId );
+			var oActLowRed		= document.getElementById( "lblinlow"	+ numId );
+			var oOffDelay		= document.getElementById( "offdelay"	+ numId );
+			var oSingleMsg		= document.getElementById( "singlemsg"	+ numId );
+
+			oActHighGreen.textContent	= " High";
+			oActLowRed.textContent		= " Low";
+			oOffDelay.disabled			= 0;
+			oSingleMsg.disabled			= 0;
+
+			dualRadioBtnEnable( "msggreen" + numId, "msgred"  + numId, true );
+
+			dualRadioBtnEnable( "inithigh" + numId, "initlow" + numId, false );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function setOut( ioId )
+		{
+			var numId			= parseInt( ioId.substr( 3 ) );
+			var oActHighGreen	= document.getElementById( "lblinhigh"	+ numId );
+			var oActLowRed		= document.getElementById( "lblinlow"	+ numId );
+			var oOffDelay		= document.getElementById( "offdelay"	+ numId );
+			var oSingleMsg		= document.getElementById( "singlemsg"	+ numId );
+
+			oActHighGreen.textContent	= " Green";
+			oActLowRed.textContent		= " Red";
+			oOffDelay.setAttribute( "disabled", true );
+			oSingleMsg.setAttribute( "disabled", true );
+
+			dualRadioBtnEnable( "msggreen" + numId, "msgred"  + numId, false );
+
+			dualRadioBtnEnable( "inithigh" + numId, "initlow" + numId, true );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function buildLncvIOAdr( id )
+		{
+			var oAdr	= document.getElementById( "adr" + id );
+			var oTyp	= document.getElementById( "in" + id );
+			var oMsgTyp	= document.getElementById( "sensor" + id );
+			var oActOn	= document.getElementById( "inhigh" + id );
+			var oLncv	= document.getElementById( "lncv" + (10 + id) );
+			
+			var numAdr	= parseInt( oAdr.value ) * 10;
+
+			if( true == oTyp.checked )
+			{
+				numAdr += 4;
+			}
+			
+			if( true == oMsgTyp.checked )
+			{
+				numAdr += 2;
+			}
+			
+			if( true == oActOn.checked )
+			{
+				numAdr += 1;
+			}
+			
+			oLncv.value = numAdr;
+		}
+
+		//------------------------------------------------------------------
+		//
+		function buildLncvFromRadio( lncvId, radioId )
+		{
+			var numOutState = 0;
+
+			for( var id = 1 ; id <= gIOCount ; id++ )
+			{
+				var oActualRadio = document.getElementById( radioId + id );
+
+				if( oActualRadio.checked )
+				{
+					numOutState += parseInt( oActualRadio.value );
+				}
+			}
+
+			document.getElementById( lncvId ).value = numOutState;
+		}
+
+		//------------------------------------------------------------------
+		//
+		function buildLncvFromCheckbox( lncvId, checkboxId )
+		{
+			var lncvValue	= 0;
+
+			for( var idx = 1 ; idx <= gIOCount ; idx++ )
+			{
+				var oActual = document.getElementById( checkboxId + idx );
+				
+				if( oActual.checked )
+				{
+					lncvValue += parseInt( oActual.value );
+				}
+			}
+			
+			document.getElementById( lncvId ).value = lncvValue;
+		}
+
+		//------------------------------------------------------------------
+		//
+		function splitLncvIOAdr( id )
+		{
+			var oLncv	= document.getElementById( "lncv" + id );
+
+			id -= 10;
+
+			var oAdr		= document.getElementById( "adr" + id );
+			var oInput		= document.getElementById( "in" + id );
+			var oOutput		= document.getElementById( "out" + id );
+			var oSwitch		= document.getElementById( "switch" + id );
+			var oSensor		= document.getElementById( "sensor" + id );
+			var oHighGreen	= document.getElementById( "inhigh" + id );
+			var oLowRed		= document.getElementById( "inlow" + id );
+
+			var help	= parseInt( oLncv.value );
+			var numAdr	= Math.trunc( help / 10 );
+			help -= (numAdr * 10);
+
+			oAdr.value = numAdr;
+
+			if( 0 != (help & 0x01) )
+			{
+				oHighGreen.checked = true;
+			}
+			else
+			{
+				oLowRed.checked = true;
+			}
+
+			if( 0 != (help & 0x02) )
+			{
+				oSensor.checked = true;
+			}
+			else
+			{
+				oSwitch.checked = true;
+			}
+
+			if( 0 != (help & 0x04) )
+			{
+				oInput.checked = true;
+				setIn( "in" + id );
+			}
+			else
+			{
+				oOutput.checked = true;
+				setOut( "out" + id );
+			}
+		}
+
+		//------------------------------------------------------------------
+		//
+		function splitLncvToRadio( lncvId, radioOne, radioZero )
+		{
+			var radioIdx	= 1;
+			var oLncv		= document.getElementById( lncvId );
+			var lncvBinary	= parseInt( oLncv.value ).toString( 2 );
+
+			for( var idx = lncvBinary.length - 1 ; idx >= 0 ; idx-- )
+			{
+				if( '1' == lncvBinary[ idx ] )
+				{
+					document.getElementById( radioOne + radioIdx ).checked = true;
+				}
+				else
+				{
+					document.getElementById( radioZero + radioIdx ).checked = true;
+				}
+
+				radioIdx++;
+			}
+
+			while( gIOCount >= radioIdx )
+			{
+				document.getElementById( radioZero + radioIdx ).checked = true;
+				radioIdx++;
+			}
+		}
+
+		//------------------------------------------------------------------
+		//
+		function splitLncvToCheckbox( lncvId, checkboxId )
+		{
+			var idxCheckBox	= 1;
+			var oLncv		= document.getElementById( lncvId );
+			var lncvBinary	= parseInt( oLncv.value ).toString( 2 );
+
+			for( var idx = lncvBinary.length - 1 ; idx >= 0 ; idx-- )
+			{
+				var actualCheckBox = document.getElementById( checkboxId + idxCheckBox );
+				
+				if( '1' == lncvBinary[ idx ] )
+				{
+					actualCheckBox.checked = true;
+				}
+				else
+				{
+					actualCheckBox.checked = false;
+				}
+				
+				idxCheckBox++;
+			}
+				
+			while( gIOCount >= idxCheckBox )
+			{
+				document.getElementById( checkboxId + idxCheckBox ).checked = false;
+				idxCheckBox++;
+			}
+		}
+
+		//------------------------------------------------------------------
+		//
+		function copyOffDelayToLncv( id )
+		{
+			var oConf	= document.getElementById( "offdelay" + id );
+			var oLncv	= document.getElementById( "lncv" + (30 + id) );
+
+			oLncv.value = oConf.value;
+		}
+
+		//------------------------------------------------------------------
+		//
+		function copyOffDelayToConf( id )
+		{
+			var oConf	= document.getElementById( "offdelay" + (id - 30) );
+			var oLncv	= document.getElementById( "lncv" + id );
+
+			oConf.value = oLncv.value;
+		}
+
+		//------------------------------------------------------------------
+		//
+		function setDefaultConf( count )
+		{
+			for( var id = 0 ; id < count ; id++ )
+			{
+				var oLncv = document.getElementById( 'lncv' + id );
+				
+				switch( id )
+				{
+					case 0:
+						oLncv.value = 1;
+						break;
+
+					case 1:
+						oLncv.value = 1510;
+						break;
+
+					case 4:
+					case 7:
+						oLncv.value = 10;
+						break;
+
+					default:
+						oLncv.value = 0;
+						break;
+				}
+
+				if( oLncv.onchange )
+				{
+					oLncv.onchange();
+				}
+			}
+		}
+
+		//------------------------------------------------------------------
+		//
+		function addHead( count )
+		{
+			var tableHeaderRow	= document.getElementById( "tableheaderrow" );
+			const oTh			= document.createElement( 'th' );
+			oTh.textContent		= "I/O";
+			tableHeaderRow.appendChild( oTh );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				const newTh			= document.createElement( 'th' );
+				newTh.textContent	= idx;
+
+				tableHeaderRow.appendChild( newTh );
+			}
+		}
+
+		//------------------------------------------------------------------
+		//
+		function addOffTimeRow( count )
+		{
+			var tableBody	= document.getElementById( "tablebody" );
+
+			const oTr		= document.createElement( 'tr' );
+			const oTd		= document.createElement( 'td' );
+
+			oTd.textContent	= "OFF delay (ms)";
+			oTr.appendChild( oTd );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				const oTd			= document.createElement( 'td' );
+
+				const oInput		= document.createElement( 'input' );
+				oInput.type			= "number";
+				oInput.inputmode	= "decimal";
+				oInput.id			= "offdelay" + idx;
+				oInput.min			= 0;
+				oInput.max			= 65535;
+				oInput.step			= 1;
+				oInput.value		= 0;
+
+				oInput.setAttribute( "onChange", "copyOffDelayToLncv( " + idx + " );" );
+
+				oTd.appendChild( oInput );
+				oTr.appendChild( oTd );
+			}
+
+			tableBody.appendChild( oTr );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function addAdrRow( count )
+		{
+			var tableBody	= document.getElementById( "tablebody" );
+
+			const oTr		= document.createElement( 'tr' );
+			const oTd		= document.createElement( 'td' );
+
+			oTd.textContent	= "Adresse";
+			oTr.appendChild( oTd );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				const oTd	= document.createElement( 'td' );
+
+				const oInput		= document.createElement( 'input' );
+				oInput.type			= "number";
+				oInput.inputmode	= "decimal";
+				oInput.id			= "adr" + idx;
+				oInput.min			= 0;
+				oInput.max			= 2048;
+				oInput.step			= 1;
+				oInput.value		= 0;
+
+				oInput.setAttribute( "onChange", "buildLncvIOAdr( " + idx + " );" );
+
+				oTd.appendChild( oInput );
+				oTr.appendChild( oTd );
+			}
+
+			tableBody.appendChild( oTr );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function addTypRow( count )
+		{
+			var tableBody	= document.getElementById( "tablebody" );
+
+			const oTr		= document.createElement( 'tr' );
+			const oTd		= document.createElement( 'td' );
+
+			oTd.textContent	= "Typ";
+			oTr.appendChild( oTd );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				const oTd		= document.createElement( 'td' );
+				const myDual	= dualRadioBtn( oTd, "in" + idx, " In ", 4, "out" + idx, " Out", 0, "in" + idx,
+												"setIn(  'in"  + idx + "' ); buildLncvIOAdr( " + idx + " );",
+												"setOut( 'out" + idx + "' ); buildLncvIOAdr( " + idx + " );" );
+
+				oTr.appendChild( oTd );
+			}
+
+			tableBody.appendChild( oTr );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function addMsgTypRow( count )
+		{
+			var tableBody	= document.getElementById( "tablebody" );
+
+			const oTr		= document.createElement( 'tr' );
+			const oTd		= document.createElement( 'td' );
+
+			oTd.textContent	= "Message Typ";
+			oTr.appendChild( oTd );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				const oTd		= document.createElement( 'td' );
+				const myDual	= dualRadioBtn( oTd, "switch" + idx, " Switch", 0, "sensor" + idx, " Sensor", 2, "switch" + idx,
+												"buildLncvIOAdr( " + idx + " );",
+												"buildLncvIOAdr( " + idx + " );" );
+
+				oTr.appendChild( oTd );
+			}
+
+			tableBody.appendChild( oTr );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function addActiveRow( count )
+		{
+			var tableBody	= document.getElementById( "tablebody" );
+
+			const oTr		= document.createElement( 'tr' );
+			const oTd		= document.createElement( 'td' );
+
+			oTd.textContent	= "Act on";
+			oTr.appendChild( oTd );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				const oTd		= document.createElement( 'td' );
+				const myDualIn	= dualRadioBtn( oTd, "inhigh" + idx, " High", 1, "inlow" + idx, " Low", 0, "inhigh" + idx,
+												"buildLncvIOAdr( " + idx + " );",
+												"buildLncvIOAdr( " + idx + " );" );
+
+				oTr.appendChild( oTd );
+			}
+
+			tableBody.appendChild( oTr );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function addInitOutStateRow( count )
+		{
+			var tableBody	= document.getElementById( "tablebody" );
+			var numFlag		= 1;
+
+			const oTr		= document.createElement( 'tr' );
+			const oTd		= document.createElement( 'td' );
+
+			oTd.textContent	= "Init Out State";
+			oTr.appendChild( oTd );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				const oTd		= document.createElement( 'td' );
+
+				const myDualIn	= dualRadioBtn( oTd, "inithigh" + idx, " High", numFlag, "initlow" + idx, " Low", 0, "initlow" + idx,
+												"buildLncvFromRadio( 'lncv6', 'inithigh' );",
+												"buildLncvFromRadio( 'lncv6', 'inithigh' );" );
+
+				numFlag *=2;
+
+				oTr.appendChild( oTd );
+			}
+
+			tableBody.appendChild( oTr );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				dualRadioBtnEnable( "inithigh" + idx, "initlow" + idx, false );
+			}
+		}
+
+		//------------------------------------------------------------------
+		//
+		function addMsgActiveRow( count )
+		{
+			var tableBody	= document.getElementById( "tablebody" );
+			var numFlag		= 1;
+
+			const oTr		= document.createElement( 'tr' );
+			const oTd		= document.createElement( 'td' );
+
+			oTd.textContent	= "Active Msg";
+			oTr.appendChild( oTd );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				const oTd		= document.createElement( 'td' );
+				const myDualIn	= dualRadioBtn( oTd, "msggreen" + idx, " Green", 0, "msgred" + idx, " Red", numFlag, "msggreen" + idx,
+												"buildLncvFromRadio( 'lncv9', 'msgred' );",
+												"buildLncvFromRadio( 'lncv9', 'msgred' );" );
+
+				numFlag *=2;
+
+				oTr.appendChild( oTd );
+			}
+
+			tableBody.appendChild( oTr );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function addSingleMsgRow( count )
+		{
+			var tableBody	= document.getElementById( "tablebody" );
+			var numFlag		= 1;
+
+			const oTr		= document.createElement( 'tr' );
+			const oTd		= document.createElement( 'td' );
+
+			oTd.textContent	= "single Msg";
+			oTr.appendChild( oTd );
+
+			for( var idx = 1 ; idx <= count ; idx++ )
+			{
+				const oTd			= document.createElement( 'td' );
+				oTd.align			= "center";
+
+				const oInput		= document.createElement( 'input' );
+				oInput.type			= "checkbox";
+				oInput.id			= "singlemsg" + idx;
+				oInput.value		= numFlag;
+
+				oInput.setAttribute( "onChange", "buildLncvFromCheckbox( 'lncv8', 'singlemsg' );" );
+
+				numFlag *=2;
+
+				oTd.appendChild( oInput );
+				oTr.appendChild( oTd );
+			}
+
+			tableBody.appendChild( oTr );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function buildLncvTable( columns, cellCount )
+		{
+			var rows		= (cellCount / columns) + 1;
+			var oLncvRow	= document.getElementById( "lncvheader" );
+			var oLncvBody	= document.getElementById( "lncvbody" );
+
+			//----------------------------------------------------------
+			//	Header
+			//
+			const oThFirst			= document.createElement( 'th' );
+			oThFirst.textContent	= "LNCVs";
+
+			oLncvRow.appendChild( oThFirst );
+
+			for( var idx = 0 ; idx < columns ; idx++ )
+			{
+				const oTh		= document.createElement( 'th' );
+				oTh.textContent	= "" + idx;
+				
+				oLncvRow.appendChild( oTh );
+			}
+
+			//----------------------------------------------------------
+			//	Body
+			//
+			for( var row = 0 ; row < cellCount ; row += columns )
+			{
+				const oTr		= document.createElement( 'tr' );
+				const oTdFirst			= document.createElement( 'td' );
+				oTdFirst.textContent	= row;
+
+				oTr.appendChild( oTdFirst );
+
+				for( var cell = row ; cell < (row + columns) && cell < cellCount ; cell++ )
+				{
+					const oTd			= document.createElement( 'td' );
+
+					const oInput		= document.createElement( 'input' );
+					oInput.class		= "tdlncvinput";
+					oInput.type			= "number";
+					oInput.inputmode	= "decimal";
+					oInput.id			= "lncv" + cell;
+					oInput.min			= 0;
+					oInput.max			= 65535;
+					oInput.step			= 1;
+					oInput.value		= cell;
+
+					//--------------------------------------------------
+					//	set OnChange functions
+					//
+					switch( cell )
+					{
+						case 6:
+							oInput.setAttribute( "onChange", "splitLncvToRadio( 'lncv6', 'inithigh', 'initlow' );" );
+							break;
+
+						case 8:
+							oInput.setAttribute( "onChange", "splitLncvToCheckbox( 'lncv8', 'singlemsg' );" );
+							break;
+
+						case 9:
+							oInput.setAttribute( "onChange", "splitLncvToRadio( 'lncv9', 'msgred', 'msggreen' );" );
+							break;
+
+						default:
+							break;
+					}
+
+					if( (10 < cell) && ((10 + gIOCount) >= cell) )
+					{
+						oInput.setAttribute( "onChange", "splitLncvIOAdr( " + cell + " );" );
+					}
+
+					if( (30 < cell) && ((30 + gIOCount) >= cell) )
+					{
+						oInput.setAttribute( "onChange", "copyOffDelayToConf( " + cell + " );" );
+					}
+
+					oTd.appendChild( oInput );
+					oTr.appendChild( oTd );
+				}
+
+				oLncvBody.appendChild( oTr );
+			}
+		}
+
+		//------------------------------------------------------------------
+		//	start point of programm
+		//
+		document.addEventListener( "DOMContentLoaded", function()
+			{
+				addHead( gIOCount );
+				addAdrRow( gIOCount );
+				addTypRow( gIOCount );
+				addMsgTypRow( gIOCount );
+				addActiveRow( gIOCount );
+				addInitOutStateRow( gIOCount );
+				addMsgActiveRow( gIOCount );
+				addSingleMsgRow( gIOCount );
+				addOffTimeRow( gIOCount );
+				
+				buildLncvTable( gLncvPerRow, gLncvCount );
+				setDefaultConf( gLncvCount );
+				
+				document.getElementById( "reset" ).setAttribute( "onclick", "setDefaultConf( " + gLncvCount + " );" );
+			}
+		);
+	</script>
+</head>
+
+<body>
+	<h1>Universal I/O Konfigurator</h1>
+	
+	<div class="gridbox">
+		<div>
+			<p>
+				Die Universal-Patine hat 16 Ein- bzw. Ausg&auml;nge.<br>
+				Mit der Tabelle unten k&ouml;nnen diese konfiguriert werden.<br>
+				Als Ergebnis werden die entsprechenden Werte f&uuml;r die LNCVs ausgegeben.
+			</p>
+
+			<p>
+				Der umgekehrte Weg ist auch m&ouml;glich.<br>
+				Einfach die Werte aus den LNCVs in die entsprechenden Felder eintragen<br>
+				und die eingestellte Konfiguration wird angezeigt.
+			</p>
+		</div>
+
+		<div>
+			<div>
+				<label for="load">Wähle eine Konfigurationsdatei</label>
+				<input type="file" id="load" size="100">
+			</div>
+
+			<button id="reset">Leere Konfiguration</button>
+		</div>
+	</div>
+
+	<table id="ioconfigtable" border="0">
+		<thead>
+			<tr id="tableheaderrow">
+			</tr>
+		</thead>
+		<tbody id="tablebody">
+		</tbody>
+	</table>
+
+	<p></p>
+
+	<table id="lncvtable" border="1">
+		<thead>
+			<tr id="lncvheader">
+			</tr>
+		</thead>
+		<tbody id="lncvbody">
+		</tbody>
+	</table>
+</body>
+
+</html>
