@@ -34,6 +34,11 @@
 			grid-template-columns: auto auto;
 		}
 
+		.buttondiv {
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
+
 		.lncvbox {
 			background-color: #90d050;
 		}
@@ -46,8 +51,24 @@
 			padding-left: 16px;
 		}
 
-		#reset {
-			font-size: 18px;
+		input[ type="file" ] {
+			margin-top: 10px;
+			margin-right: 10px;
+			font-size: 12px;
+			width: 400px;
+		}
+
+		#loadsavediv {
+			margin-bottom: 20px;
+		}
+
+		#loadsavediv button {
+			margin-top: 10px;
+			margin-right: 30px;
+		}
+
+		#btnreset {
+			font-size: 16px;
 		}
 
 		summary {
@@ -114,6 +135,9 @@
 		//------------------------------------------------------------------
 		//	global variables
 		//
+		var gLncvMaxNum				= 2048;
+		var gLncvFileCountPerLine	= 5;
+
 		var gLncvCount	= 70;
 		var gLncvPerRow	= 10;
 		var gIOCount	= 16;
@@ -448,6 +472,13 @@
 		//
 		function setDefaultConf( count )
 		{
+			var oBtnLoad	= document.getElementById( "btnload" );
+			var oBtnSave	= document.getElementById( "btnsave" );
+
+			oBtnLoad.disabled	= 1;
+			oBtnSave.disabled	= 1;
+			
+			
 			for( var id = 0 ; id < count ; id++ )
 			{
 				var oLncv = document.getElementById( 'lncv' + id );
@@ -472,6 +503,11 @@
 						break;
 				}
 
+				//--------------------------------------------------
+				//	if the actual lncv has an onchange function
+				//	then call the function to update
+				//	the configuration table
+				//
 				if( oLncv.onchange )
 				{
 					oLncv.onchange();
@@ -825,6 +861,147 @@
 		}
 
 		//------------------------------------------------------------------
+		//
+		function fileSelected()
+		{
+			var oFile		= document.getElementById( "fileselect" );
+			var oBtnLoad	= document.getElementById( "btnload" );
+			var oBtnSave	= document.getElementById( "btnsave" );
+
+			if( oFile.files.length > 0 )
+			{
+				oBtnLoad.disabled = 0;
+				oBtnSave.disabled = 0;
+			}
+			else
+			{
+				oFullPath.value = "Nix ausgewählt";
+			}
+		}
+
+		//------------------------------------------------------------------
+		//
+		function fileLoad()
+		{
+			var oFile		= document.getElementById( "fileselect" );
+			var oReader		= new FileReader();
+
+			oReader.onload = function()
+			{
+				var oFullPath		= document.getElementById( "fullpath" );
+				var aktualLncvIdx	= 0;
+
+				const lines = oReader.result.split( "\r\n" );
+				
+				//--------------------------------------------------
+				//	start with line 3 because from this line on
+				//	there will be lncv data
+				//
+				for( var line = 3 ; (line < lines.length) && (aktualLncvIdx < gLncvCount) ; line++ )
+				{
+					//----------------------------------------------
+					//	split the line to get the information
+					//	for one lncv
+					//
+					const lncvs = lines[ line ].split( ";" );
+
+					for( var idx = 0 ; (idx < lncvs.length) && (aktualLncvIdx < gLncvCount) ; idx++, aktualLncvIdx++ )
+					{
+						//------------------------------------------
+						//	split lncv info to get lncv number
+						//	and lncv value
+						//
+						const	aktualLncv	= lncvs[ idx ].split( "=" );
+						var		lncvNum		= parseInt( aktualLncv[ 0 ] );
+						var		lncvValue	= parseInt( aktualLncv[ 1 ] );
+
+						if( 66666 > lncvValue )
+						{
+							var oLncv	= document.getElementById( "lncv" + parseInt( aktualLncv[ 0 ] ) );
+
+							oLncv.value	= lncvValue;
+
+							//--------------------------------------
+							//	if the actual lncv has an onchange
+							//	function then call the function
+							//	to update the configuration table
+							//
+							if( oLncv.onchange )
+							{
+								oLncv.onchange();
+							}
+						}
+					}
+				}
+
+				oFullPath.value = "Konfigurationsdatei erfolgreich gelesen";
+			}
+
+			oReader.readAsText( oFile.files[ 0 ] );
+		}
+
+		//------------------------------------------------------------------
+		//
+		function fileSave()
+		{
+			var oFile		= document.getElementById( "fileselect" );
+			var oFullPath	= document.getElementById( "fullpath" );
+			var oLncv1		= document.getElementById( "lncv1" );
+			var lncvIdx		= 0;
+			var	fileContent	= "// Erzeugt mit dem Uni-IO-Konfigurator Vers 0.9.0 am xx.xx.xxxx  //\r\n";
+
+			//------------------------------------------------------
+			//	Datei-Inhalt erzeugen
+			//
+			fileContent += "!:  !! LocoNet-ConfigurationFile !!\r\n";
+			fileContent += oLncv1.value + ":\r\n";
+
+			while( lncvIdx <= gLncvMaxNum )
+			{
+				for( var idx = 0 ; idx < gLncvFileCountPerLine ; idx++, lncvIdx++ )
+				{
+					if( lncvIdx <= gLncvMaxNum )
+					{
+						var oLncv	= document.getElementById( "lncv" + lncvIdx );
+
+						if( lncvIdx < gLncvCount )
+						{
+							fileContent += lncvIdx + "= " + oLncv.value;
+						}
+						else
+						{
+							fileContent += lncvIdx + "= 66666";
+						}
+					}
+					
+					if( idx < (gLncvFileCountPerLine - 1) )
+					{
+						fileContent += " ; ";
+					}
+				}
+
+				if( lncvIdx <= gLncvMaxNum )
+				{
+					fileContent += "\r\n";
+				}
+			}
+
+			//------------------------------------------------------
+			//	Jetzt Datei speichern
+			//
+			const myBlob	= new Blob( [ fileContent ], { type: "text/plain;charset-utf-8" } );
+
+			const myLink	= document.createElement( 'a' );
+			myLink.href		= URL.createObjectURL( myBlob );
+			myLink.download	= oFile.files[ 0 ].name;
+
+			myLink.click();
+			URL.revokeObjectURL( myLink.href );
+
+			oFullPath.value	= "Datei erfolgreich gespeichert";
+		}
+
+		//------------------------------------------------------------------
 		//	start point of programm
 		//
 		document.addEventListener( "DOMContentLoaded", function()
@@ -838,20 +1015,43 @@
 				addMsgActiveRow( gIOCount );
 				addSingleMsgRow( gIOCount );
 				addOffTimeRow( gIOCount );
-				
+
 				buildLncvTable( gLncvPerRow, gLncvCount );
 				setDefaultConf( gLncvCount );
-				
-				document.getElementById( "reset" ).setAttribute( "onclick", "setDefaultConf( " + gLncvCount + " );" );
+
+				document.getElementById( "fileselect" ).setAttribute( "onChange", "fileSelected();" );
+
+				document.getElementById( "btnload" ).setAttribute( "onclick", "fileLoad();" );
+				document.getElementById( "btnsave" ).setAttribute( "onclick", "fileSave();" );
+
+				document.getElementById( "btnreset" ).setAttribute( "onclick", "setDefaultConf( " + gLncvCount + " );" );
 			}
 		);
 	</script>
 </head>
 
 <body>
-	<h1>Universal I/O Konfigurator</h1>
+	<h3>Universal I/O Konfigurator</h3>
 	
 	<div class="gridbox">
+		<div>
+			<div>
+				<label for="load">Wähle eine Konfigurationsdatei</label><br>
+				<input type="file" id="fileselect" size="300">
+			</div>
+
+			<div class="buttondiv" id="loadsavediv">
+				<input type="text" id="fullpath" size="100">
+				<br>
+				<button id="btnload" disabled>Load</button>
+				<button id="btnsave" disabled>Save</button>
+			</div>
+			
+			<div class="buttondiv" id="resetdiv">
+				<button id="btnreset">Leere Konfiguration</button>
+			</div>
+		</div>
+
 		<div>
 			<p>
 				Die Universal-Patine hat 16 Ein- bzw. Ausg&auml;nge.<br>
@@ -864,15 +1064,6 @@
 				Einfach die Werte aus den LNCVs in die entsprechenden Felder eintragen<br>
 				und die eingestellte Konfiguration wird angezeigt.
 			</p>
-		</div>
-
-		<div>
-			<div>
-				<label for="load">Wähle eine Konfigurationsdatei</label>
-				<input type="file" id="load" size="100">
-			</div>
-
-			<button id="reset">Leere Konfiguration</button>
 		</div>
 	</div>
 
