@@ -31,7 +31,7 @@
 			display: grid;
 			grid-auto-flow: row dense;
 			grid-gap: 5px;
-			grid-template-columns: auto auto;
+			grid-template-columns: auto auto auto;
 		}
 
 		.buttondiv {
@@ -63,7 +63,7 @@
 		}
 
 		#loadsavediv button {
-			margin-top: 10px;
+			margin-bottom: 10px;
 			margin-right: 30px;
 		}
 
@@ -75,8 +75,8 @@
 			font-weight: bold;
 		}
 		
-		thead tr th {
-			font-size: 14px;
+		th, td {
+			font-size: 12px;
 		}
 
 		td, th {
@@ -135,6 +135,8 @@
 		//------------------------------------------------------------------
 		//	global variables
 		//
+		var gVersionStr				= "Vers. 0.9.1";
+
 		var gLncvMaxNum				= 2048;
 		var gLncvFileCountPerLine	= 5;
 
@@ -450,22 +452,12 @@
 
 		//------------------------------------------------------------------
 		//
-		function copyOffDelayToLncv( id )
+		function copyValue( sourceId, destId )
 		{
-			var oConf	= document.getElementById( "offdelay" + id );
-			var oLncv	= document.getElementById( "lncv" + (30 + id) );
+			var oSource	= document.getElementById( sourceId );
+			var oDest	= document.getElementById( destId );
 
-			oLncv.value = oConf.value;
-		}
-
-		//------------------------------------------------------------------
-		//
-		function copyOffDelayToConf( id )
-		{
-			var oConf	= document.getElementById( "offdelay" + (id - 30) );
-			var oLncv	= document.getElementById( "lncv" + id );
-
-			oConf.value = oLncv.value;
+			oDest.value = oSource.value;
 		}
 
 		//------------------------------------------------------------------
@@ -490,12 +482,12 @@
 						break;
 
 					case 1:
-						oLncv.value = 1510;
+						oLncv.value = 1512;
 						break;
 
 					case 4:
 					case 7:
-						oLncv.value = 10;
+						oLncv.value = 20;
 						break;
 
 					default:
@@ -517,11 +509,37 @@
 
 		//------------------------------------------------------------------
 		//
+		function setSoftwareVersion( versionId )
+		{
+			var oConfVersion	= document.getElementById( 'softwareversion' );
+			var strLncvVersion	= document.getElementById( versionId ).value;
+			var numLncvVersion	= parseInt( strLncvVersion );
+			var textLength		= strLncvVersion.length;
+
+			if( 0 == numLncvVersion )
+			{
+				oConfVersion.innerText = "0.0";
+			}
+			else if( 10000 < numLncvVersion )
+			{
+				oConfVersion.innerText =	strLncvVersion.substr( 0, textLength - 4 ) + "." +
+											strLncvVersion.substr( textLength - 4, 2 ) + "." +
+											strLncvVersion.substr( textLength - 2, 2 );
+			}
+			else
+			{
+				oConfVersion.innerText =	strLncvVersion.substr( 0, textLength - 2 ) + "." +
+											strLncvVersion.substr( textLength - 2, 2 );
+			}
+		}
+
+		//------------------------------------------------------------------
+		//
 		function addHead( count )
 		{
 			var tableHeaderRow	= document.getElementById( "tableheaderrow" );
 			const oTh			= document.createElement( 'th' );
-			oTh.textContent		= "I/O";
+			oTh.textContent		= "I/O Pin Nummer";
 			tableHeaderRow.appendChild( oTh );
 
 			for( var idx = 1 ; idx <= count ; idx++ )
@@ -541,8 +559,17 @@
 
 			const oTr		= document.createElement( 'tr' );
 			const oTd		= document.createElement( 'td' );
+			const oDetails	= document.createElement( 'details' );
+			const oSummary	= document.createElement( 'summary' );
 
-			oTd.textContent	= "OFF delay (ms)";
+			oSummary.innerText	= "Ausschaltverzögerung (ms)";
+
+			oDetails.innerHTML	=		"<p>Wenn der Eingang wieder in den Ruhezustand zurück geht,"
+									+	" wird diese Zeit abgewartet, bis eine Nachricht über das Loconet gesendet wird.</p>"
+									+	"<p>Nur für Eingang notwendig.</p>";
+
+			oDetails.appendChild( oSummary );
+			oTd.appendChild( oDetails );
 			oTr.appendChild( oTd );
 
 			for( var idx = 1 ; idx <= count ; idx++ )
@@ -558,7 +585,7 @@
 				oInput.step			= 1;
 				oInput.value		= 0;
 
-				oInput.setAttribute( "onChange", "copyOffDelayToLncv( " + idx + " );" );
+				oInput.setAttribute( "onChange", "copyValue( 'offdelay" + idx + "', 'lncv" + (30 + idx) + "' );" );
 
 				oTd.appendChild( oInput );
 				oTr.appendChild( oTd );
@@ -575,8 +602,16 @@
 
 			const oTr		= document.createElement( 'tr' );
 			const oTd		= document.createElement( 'td' );
+			const oDetails	= document.createElement( 'details' );
+			const oSummary	= document.createElement( 'summary' );
 
-			oTd.textContent	= "Adresse";
+			oSummary.textContent	= "I/O Pin Adresse";
+
+			oDetails.innerHTML		=		"<p>Ausgang: Enthält eine Loconet Nachricht diese Adresse, dann reagiert der Ausgang.</p>"
+										+	"<p>Eingang: Diese Adresse wird in der Loconet Nachricht verwendet.</p>";
+
+			oDetails.appendChild( oSummary );
+			oTd.appendChild( oDetails );
 			oTr.appendChild( oTd );
 
 			for( var idx = 1 ; idx <= count ; idx++ )
@@ -610,13 +645,13 @@
 			const oTr		= document.createElement( 'tr' );
 			const oTd		= document.createElement( 'td' );
 
-			oTd.textContent	= "Typ";
+			oTd.textContent	= "I/O Typ";
 			oTr.appendChild( oTd );
 
 			for( var idx = 1 ; idx <= count ; idx++ )
 			{
 				const oTd		= document.createElement( 'td' );
-				const myDual	= dualRadioBtn( oTd, "in" + idx, " In ", 4, "out" + idx, " Out", 0, "in" + idx,
+				const myDual	= dualRadioBtn( oTd, "in" + idx, " Eingang", 4, "out" + idx, " Ausgang", 0, "in" + idx,
 												"setIn(  'in"  + idx + "' ); buildLncvIOAdr( " + idx + " );",
 												"setOut( 'out" + idx + "' ); buildLncvIOAdr( " + idx + " );" );
 
@@ -635,7 +670,7 @@
 			const oTr		= document.createElement( 'tr' );
 			const oTd		= document.createElement( 'td' );
 
-			oTd.textContent	= "Message Typ";
+			oTd.textContent	= "Nachrichten Typ";
 			oTr.appendChild( oTd );
 
 			for( var idx = 1 ; idx <= count ; idx++ )
@@ -821,13 +856,46 @@
 					oInput.step			= 1;
 					oInput.value		= cell;
 
+					if( (1 == cell) || (2 == cell) )
+					{
+						oInput.disabled = 1;
+					}
+					else
+					{
+						oInput.setAttribute( "onFocus", "{ this.select(); }" );
+					}
+
 					//--------------------------------------------------
 					//	set OnChange functions
 					//
 					switch( cell )
 					{
+						case 0:
+							oInput.setAttribute( "onChange", "copyValue( 'lncv0', 'moduladr' );" );
+							break;
+
+						case 1:
+							oInput.setAttribute( "onChange", "copyValue( 'lncv1', 'articlenum' );" );
+							break;
+
+						case 2:
+							oInput.setAttribute( "onChange", "setSoftwareVersion( 'lncv2' );" );
+							break;
+
+						case 4:
+							oInput.setAttribute( "onChange", "copyValue( 'lncv4', 'senddelay' );" );
+							break;
+
+						case 5:
+							oInput.setAttribute( "onChange", "copyValue( 'lncv5', 'statusadr' );" );
+							break;
+
 						case 6:
 							oInput.setAttribute( "onChange", "splitLncvToRadio( 'lncv6', 'inithigh', 'initlow' );" );
+							break;
+
+						case 7:
+							oInput.setAttribute( "onChange", "copyValue( 'lncv7', 'outputdelay' );" );
 							break;
 
 						case 8:
@@ -849,7 +917,7 @@
 
 					if( (30 < cell) && ((30 + gIOCount) >= cell) )
 					{
-						oInput.setAttribute( "onChange", "copyOffDelayToConf( " + cell + " );" );
+						oInput.setAttribute( "onChange", "copyValue( 'lncv" + cell + "', 'offdelay" + (cell - 30) + "' );" );
 					}
 
 					oTd.appendChild( oInput );
@@ -875,7 +943,7 @@
 			}
 			else
 			{
-				oFullPath.value = "Nix ausgewählt";
+				oInfoLine.value = "Nix ausgewählt";
 			}
 		}
 
@@ -888,7 +956,7 @@
 
 			oReader.onload = function()
 			{
-				var oFullPath		= document.getElementById( "fullpath" );
+				var oInfoLine		= document.getElementById( "infoline" );
 				var aktualLncvIdx	= 0;
 
 				const lines = oReader.result.split( "\r\n" );
@@ -934,7 +1002,7 @@
 					}
 				}
 
-				oFullPath.value = "Konfigurationsdatei erfolgreich gelesen";
+				oInfoLine.value = "Konfigurationsdatei erfolgreich gelesen";
 			}
 
 			oReader.readAsText( oFile.files[ 0 ] );
@@ -945,10 +1013,10 @@
 		function fileSave()
 		{
 			var oFile		= document.getElementById( "fileselect" );
-			var oFullPath	= document.getElementById( "fullpath" );
+			var oInfoLine	= document.getElementById( "infoline" );
 			var oLncv1		= document.getElementById( "lncv1" );
 			var lncvIdx		= 0;
-			var	fileContent	= "// Erzeugt mit dem Uni-IO-Konfigurator Vers 0.9.0 am xx.xx.xxxx  //\r\n";
+			var	fileContent	= "// Erzeugt mit dem Uni-IO-Konfigurator " + gVersionStr + " am " + (new Date().toLocaleDateString()) + "  //\r\n";
 
 			//------------------------------------------------------
 			//	Datei-Inhalt erzeugen
@@ -963,14 +1031,15 @@
 					if( lncvIdx <= gLncvMaxNum )
 					{
 						var oLncv	= document.getElementById( "lncv" + lncvIdx );
+						var lncvNum	= "" + lncvIdx;
 
 						if( lncvIdx < gLncvCount )
 						{
-							fileContent += lncvIdx + "= " + oLncv.value;
+							fileContent += lncvNum.padStart( 3, " " ) + "= " + oLncv.value.padStart( 5, " " );
 						}
 						else
 						{
-							fileContent += lncvIdx + "= 66666";
+							fileContent += lncvNum.padStart( 3, " " ) + "= 66666";
 						}
 					}
 					
@@ -998,7 +1067,7 @@
 			myLink.click();
 			URL.revokeObjectURL( myLink.href );
 
-			oFullPath.value	= "Datei erfolgreich gespeichert";
+			oInfoLine.value	= "Datei erfolgreich gespeichert";
 		}
 
 		//------------------------------------------------------------------
@@ -1006,6 +1075,8 @@
 		//
 		document.addEventListener( "DOMContentLoaded", function()
 			{
+				document.getElementById( "heading" ).innerText += (" " + gVersionStr);
+
 				addHead( gIOCount );
 				addAdrRow( gIOCount );
 				addTypRow( gIOCount );
@@ -1031,7 +1102,7 @@
 </head>
 
 <body>
-	<h3>Universal I/O Konfigurator</h3>
+	<h2 id="heading" align="center">Universal I/O Konfigurator</h2>
 	
 	<div class="gridbox">
 		<div>
@@ -1041,15 +1112,75 @@
 			</div>
 
 			<div class="buttondiv" id="loadsavediv">
-				<input type="text" id="fullpath" size="100">
-				<br>
 				<button id="btnload" disabled>Load</button>
 				<button id="btnsave" disabled>Save</button>
+				<br>
+				<input type="text" id="infoline" size="50">
 			</div>
 			
 			<div class="buttondiv" id="resetdiv">
 				<button id="btnreset">Leere Konfiguration</button>
 			</div>
+		</div>
+
+		<div>
+			<table border="0">
+				<tr>
+					<td>
+						Modul Adr.
+					</td>
+					<td>
+						<input type="number" inputmode="decimal" id="moduladr" min="1" max="2048" step="1" value="1"
+							onchange="copyValue( 'moduladr', 'lncv0' );" onfocus="{ this.select(); }">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Artikel Nr.
+					</td>
+					<td>
+						<label id="articlenum">1512</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Software Vers.
+					</td>
+					<td>
+						<label id="softwareversion">11.00</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Adresse um den<br>
+						Status abzufragen
+					</td>
+					<td>
+						<input type="number" inputmode="decimal" id="statusadr" min="0" max="2048" step="1" value="0"
+							onchange="copyValue( 'statusadr', 'lncv5' );" onfocus="{ this.select(); }">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Pause zwischen zwei<br>
+						Loconet Nachrichten (ms)
+					</td>
+					<td>
+						<input type="number" inputmode="decimal" id="senddelay" min="10" max="65535" step="1" value="20"
+							onchange="copyValue( 'senddelay', 'lncv4' );" onfocus="{ this.select(); }">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Pause zwischen zwei<br>
+						Output Nachrichten (ms)
+					</td>
+					<td>
+						<input type="number" inputmode="decimal" id="outputdelay" min="10" max="65535" step="1" value="20"
+							onchange="copyValue( 'outputdelay', 'lncv7' );" onfocus="{ this.select(); }">
+					</td>
+				</tr>
+			</table>
 		</div>
 
 		<div>
