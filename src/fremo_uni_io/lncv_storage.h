@@ -14,7 +14,21 @@
 //#
 //#-------------------------------------------------------------------------
 //#
-//#	File Version:	15		from: 06.06.2026
+//#	File Version:	13		from: 18.09.2026
+//#
+//#	Implementation:
+//#		-	add LNCVs for ON delay timer configuration
+//#			new definitions
+//#				LNCV_ADR_FIRST_ON_DELAY_ADDRESS
+//#				LNCV_ADR_LAST_ON_DELAY_ADDRESS
+//#			new member variable
+//#				m_aruiOnDelay
+//#			new function
+//#				GetIOOnDelay()
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	File Version:	12		from: 06.06.2026
 //#
 //#	Implementation:
 //#		-	add an LNCV to disable the sending of a loconet message when
@@ -170,9 +184,11 @@
 #define LNCV_ADR_LAST_IO_ADDRESS		26
 #define LNCV_ADR_FIRST_DELAY_ADDRESS	31
 #define LNCV_ADR_LAST_DELAY_ADDRESS		46
+#define LNCV_ADR_FIRST_ON_DELAY_ADDRESS	51
+#define LNCV_ADR_LAST_ON_DELAY_ADDRESS	66
 
-#define LNCV_ADR_FIRST_TOGGLE_ADDRESS	50
-#define LNCV_ADR_LAST_TOGGLE_ADDRESS	69
+#define LNCV_ADR_FIRST_TOGGLE_ADDRESS	70
+#define LNCV_ADR_LAST_TOGGLE_ADDRESS	89
 
 //----------------------------------------------------------------------
 //	LNCV configuration masks
@@ -295,6 +311,20 @@ class LncvStorageClass
 
 		//----------------------------------------------------------
 		//
+		inline uint16_t	GetIOOnDelay( uint8_t idx )
+		{
+			uint16_t	uiOnDelay = 0;
+
+			if( IO_NUMBERS > idx )
+			{
+				uiOnDelay = m_aruiOnDelay[ idx ];
+			}
+			
+			return( uiOnDelay );
+		}
+
+		//----------------------------------------------------------
+		//
 		inline uint16_t	GetIOOffDelay( uint8_t idx )
 		{
 			uint16_t	uiOffDelay = 0;
@@ -320,6 +350,7 @@ class LncvStorageClass
 		uint16_t	m_uiSingleMessage;
 		uint16_t	m_uiSendRed;
 		uint16_t	m_aruiAddress[  IO_NUMBERS ];
+		uint16_t	m_aruiOnDelay[  IO_NUMBERS ];
 		uint16_t	m_aruiOffDelay[ IO_NUMBERS ];
 };
 

@@ -52,6 +52,7 @@
 
 uint32_t	g_ulReadInputTimer					= 0L;
 uint32_t	g_ulPrintStatusTimer				= 0L;
+uint32_t	g_arulOnDelayTimer[  IO_NUMBERS ];
 uint32_t	g_arulOffDelayTimer[ IO_NUMBERS ];
 uint16_t	g_uiLnStateReceived;
 uint16_t	g_uiLnStateSend;
@@ -168,6 +169,8 @@ uint16_t GetIOState( void )
 uint16_t CheckIOState( uint16_t uiNewIOState )
 {
 	uint16_t	uiNewLnStateSend	= g_uiLnStateSend;
+	uint32_t	ulOnTimer			= 0L;
+	uint16_t	uiOnDelay			= 0;
 	uint32_t	ulOffTimer			= 0L;
 	uint16_t	uiOffDelay			= 0;
 
@@ -192,22 +195,33 @@ uint16_t CheckIOState( uint16_t uiNewIOState )
 		{
 			if( uiNewIOState & uiMask )
 			{
-				//----------------------------------------------
-				//	the new state of the pin is ON
+				//--------------------------------------------------
+				//	the IO pin has changed to ON, so ...
 				//
+				uiOnDelay = g_clLncvStorage.GetIOOnDelay( idx );
+
 				if( g_arulOffDelayTimer[ idx ] )
 				{
 					//------------------------------------------
-					//	if the off delay timer is active
+					//	... if the off delay timer is active
 					//	then stop timer and stay in 'ON' state
-					//	there is no need to send a msg
+					//	no need to send a message
 					//
 					g_arulOffDelayTimer[ idx ] = 0L;
+				}
+				else if( uiOnDelay )
+				{
+					//-------------------------------------------
+					//	... if an on delay timer is configured
+					//	then start the timer
+					//	no need to send a message
+					//
+					g_arulOnDelayTimer[ idx ] = millis() + uiOnDelay;
 				}
 				else
 				{
 					//------------------------------------------
-					//	else update the new lN send state
+					//	... else update the new lN send state
 					//
 					uiNewLnStateSend |= uiMask;
 				}
@@ -215,19 +229,32 @@ uint16_t CheckIOState( uint16_t uiNewIOState )
 			else
 			{
 				//--------------------------------------------------
-				//	the IO pin has changed to OFF, so if there is a
-				//	delay time configured then start the delay timer
+				//	the IO pin has changed to OFF, so ...
 				//
 				uiOffDelay = g_clLncvStorage.GetIOOffDelay( idx );
 				
-				if( uiOffDelay )
+				if( g_arulOnDelayTimer[ idx ] )
 				{
+					//------------------------------------------
+					//	... if the on delay timer is active
+					//	then stop timer and stay in 'OFF' state
+					//	no need to send a message
+					//
+					g_arulOnDelayTimer[ idx ] = 0L;
+				}
+				else if( uiOffDelay )
+				{
+					//-------------------------------------------
+					//	... if an on delay timer is configured
+					//	then start the timer
+					//	no need to send a message
+					//
 					g_arulOffDelayTimer[ idx ] = millis() + uiOffDelay;
 				}
 				else
 				{
 					//------------------------------------------
-					//	else update the new lN send state
+					//	... else update the new lN send state
 					//
 					uiNewLnStateSend &= ~uiMask;
 				}
@@ -254,6 +281,21 @@ uint16_t CheckIOState( uint16_t uiNewIOState )
 
 	for( idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
+		//------------------------------------------------------
+		//	check on delay timer
+		//
+		ulOnTimer = g_arulOnDelayTimer[ idx ];
+
+		if( ulOnTimer && (millis() > ulOnTimer) )
+		{
+			g_arulOnDelayTimer[ idx ] = 0L;
+
+			uiNewLnStateSend |= uiMask;
+		}
+
+		//------------------------------------------------------
+		//	check off delay timer
+		//
 		ulOffTimer = g_arulOffDelayTimer[ idx ];
 
 		if( ulOffTimer && (millis() > ulOffTimer) )
@@ -521,8 +563,8 @@ void setup()
 	uiIsLowActive	= g_clLncvStorage.GetIsLowActive();
 
 	//----	other inits  -----------------------------------------------
-//	g_clControl.Init( uiAsOutput, uiIsLowActive );
-	g_clControl.Init( uiAsOutput, 0x0000 );
+	g_clControl.Init( uiAsOutput, uiIsLowActive );
+//	g_clControl.Init( uiAsOutput, 0x0000 );
 	g_clMyLoconet.Init();
 
 	for( uint8_t idx = 0 ; idx < IO_NUMBERS ; idx++ )

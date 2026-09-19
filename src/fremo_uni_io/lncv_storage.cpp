@@ -11,6 +11,22 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	16		from: 18.09.2026
+//#
+//#	Implementation:
+//#		-	add LNCVs for ON delay timer configuration
+//#			new definitions
+//#				LNCV_ADR_FIRST_ON_DELAY_ADDRESS
+//#				LNCV_ADR_LAST_ON_DELAY_ADDRESS
+//#			new member variable
+//#				m_aruiOnDelay
+//#			new function
+//#				GetIOOnDelay()
+//#			changes in function
+//#				Init()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	15		from: 06.06.2026
 //#
 //#	Implementation:
@@ -368,6 +384,7 @@ void LncvStorageClass::Init( void )
 	//
 	for( idx = 0 ; idx < IO_NUMBERS ; idx++ )
 	{
+		m_aruiOnDelay[  idx ]	 = ReadLNCV( LNCV_ADR_FIRST_ON_DELAY_ADDRESS + idx );
 		m_aruiOffDelay[ idx ]	 = ReadLNCV( LNCV_ADR_FIRST_DELAY_ADDRESS + idx );
 
         uiHelper				 = ReadLNCV( LNCV_ADR_FIRST_IO_ADDRESS + idx );
@@ -401,7 +418,7 @@ void LncvStorageClass::Init( void )
 
 
 //**********************************************************************
-//	IsValidLNCVAdress
+//	GetInitialOutputState
 //
 uint16_t LncvStorageClass::GetInitialOutputState( void )
 {

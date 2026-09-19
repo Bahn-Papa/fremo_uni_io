@@ -90,7 +90,7 @@
 //----------------------------------------------------------------------
 //	version number
 //
-#define VERSION_MAIN			11
+#define VERSION_MAIN			12
 #define	VERSION_MINOR			0
 
 #define VERSION_NUMBER			((VERSION_MAIN * 100) + VERSION_MINOR)
@@ -106,6 +106,16 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	12.00		from: 18.09.2026
+//#
+//#	Implementation:
+//#		-	add on delay timer  !!  ATTENTION  !!  move of LNCVs
+//#			changed files
+//#				fremo_uni_io.ino
+//#				lncv_storage.cpp, lncv_storage.h
 //#
 //#-------------------------------------------------------------------------
 //#
