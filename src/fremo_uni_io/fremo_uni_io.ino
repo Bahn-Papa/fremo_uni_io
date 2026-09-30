@@ -695,6 +695,8 @@ void loop()
 	//	print actual status
 	//
 #ifdef DEBUGGING_PRINTOUT
+	g_clDebugging.Loop();
+
 	if( millis() > g_ulPrintStatusTimer )
 	{
 		g_ulPrintStatusTimer = millis() + PRINT_STATUS_TIME;

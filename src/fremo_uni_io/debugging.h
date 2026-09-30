@@ -10,6 +10,16 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	7		vom: 30.09.2026
+//#
+//#	Implementation:
+//#		-	add output of fast clock time on debug display
+//#			new functions
+//#				Loop()
+//#				PrintFastClock()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	6		vom: 22.04.2026
 //#
 //#	Implementation:
@@ -100,6 +110,7 @@ class DebuggingClass
 		DebuggingClass();
 
 		void Init( void );
+		void Loop( void );
 
 		void PrintTitle(	uint16_t uiArticleNumber,
 							uint8_t usVersionMain,
@@ -108,6 +119,8 @@ class DebuggingClass
 
 		void PrintNotifyType( notify_type_t type );
 		void PrintNotifyMsg( uint8_t usIdx, uint8_t usDirClosed, uint8_t usOutputThrown );
+
+		void PrintFastClock( uint8_t hour, uint8_t minute );
 
 		void PrintLncvDiscoverStart(	bool start,
 										uint16_t artikel,

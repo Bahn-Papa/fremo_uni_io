@@ -7,6 +7,20 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File Version:	16		from: 30.09.2026
+//#
+//#	Implementation:
+//#		-	add output of fast clock time on debug display
+//#			new global variable
+//#				g_clFastClock
+//#			changes in function
+//#				Init()
+//#				CheckForMessage()
+//#			new function
+//#				notifyFastClock()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File Version:	15		from: 05.06.2026
 //#
 //#	Implementation:
@@ -236,7 +250,14 @@ lnMsg			*g_pLnPacket;
 uint16_t		 g_uiArticleNumber;
 uint16_t		 g_uiModuleAddress;
 
-FirmwareUpdateMessage g_clFirmwareUpdate = FirmwareUpdateMessage();
+FirmwareUpdateMessage	g_clFirmwareUpdate	= FirmwareUpdateMessage();
+
+
+#ifdef DEBUGGING_PRINTOUT
+
+LocoNetFastClockClass	g_clFastClock		= LocoNetFastClockClass();
+
+#endif
 
 
 //==========================================================================
@@ -346,6 +367,10 @@ void MyLoconetClass::Init( void )
 
 	//----	start loconet communication  -------------------------------
 	LocoNet.init( LOCONET_TX_PIN );
+
+#ifdef DEBUGGING_PRINTOUT
+	g_clFastClock.init( 0, 0, 0 );
+#endif
 }
 
 
@@ -366,6 +391,11 @@ bool MyLoconetClass::CheckForMessage( void )
 			if( !g_clLNCV.processLNCVMessage( g_pLnPacket ) )
 			{
 				g_clFirmwareUpdate.processMessage( g_pLnPacket );
+
+#ifdef DEBUGGING_PRINTOUT
+				g_clFastClock.process66msActions();
+				g_clFastClock.processMessage( g_pLnPacket );
+#endif
 			}
 		}
 	}
@@ -686,6 +716,20 @@ void notifyFirmwareUpdate()
 
 	FirmwareUpdateMessage::enterBootloader();
 }
+
+
+#ifdef DEBUGGING_PRINTOUT
+
+//**********************************************************************
+//	notifyFastClock
+//----------------------------------------------------------------------
+//
+void notifyFastClock( uint8_t rate, uint8_t day, uint8_t hour, uint8_t minute, uint8_t Sync )
+{
+	g_clDebugging.PrintFastClock( hour, minute );
+}
+
+#endif
 
 
 //**********************************************************************

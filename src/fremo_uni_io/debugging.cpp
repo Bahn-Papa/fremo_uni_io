@@ -7,6 +7,28 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	7		vom: 30.09.2026
+//#
+//#	Implementation:
+//#		-	add output of fast clock time on debug display
+//#			new functions
+//#				Loop()
+//#				PrintFastClock()
+//#			new definitions
+//#				FASTCLOCK_LINE
+//#				FASTCLOCK_HOUR_COLUMN
+//#				FASTCLOCK_PAUSED_COLUMN
+//#				FASTCLOCK_COLON_COLUMN
+//#				FASTCLOCK_MINUTE_COLUMN
+//#				FASTCLOCK_BLINK_TIME
+//#
+//#			 S                     1 1 1 1 1 1
+//#			Z  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+//#			7      F C :     2 3 : 1 0
+//#			7      F C :   i P A U S E D i
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	6		vom: 22.04.2026
 //#
 //#	Implementation:
@@ -111,6 +133,7 @@
 //**************************************************************************
 
 
+#include <Arduino.h>
 #include <avr/pgmspace.h>
 #include <Wire.h>
 #include <SimpleOled.h>
@@ -129,12 +152,20 @@
 //----------------------------------------------------------------------
 //	definition of display positions
 //
-#define INPUT_STATE_LINE		2
-#define OUTPUT_STATE_LINE		4
-#define STATE_COLUMN			0
-#define	LOCONET_MSG_LINE		5
-#define LOCONET_MSG_COLUMN		0
-#define MESSAGE_LINE			7
+#define INPUT_STATE_LINE			2
+#define OUTPUT_STATE_LINE			4
+#define STATE_COLUMN				0
+#define	LOCONET_MSG_LINE			5
+#define LOCONET_MSG_COLUMN			0
+#define MESSAGE_LINE				7
+
+#define FASTCLOCK_LINE				7
+#define FASTCLOCK_HOUR_COLUMN		2
+#define FASTCLOCK_PAUSED_COLUMN		6
+#define FASTCLOCK_COLON_COLUMN		9
+#define FASTCLOCK_MINUTE_COLUMN		10
+
+#define FASTCLOCK_BLINK_TIME		1000
 
 
 //------------------------------------------------------------------
@@ -156,6 +187,12 @@ DebuggingClass	g_clDebugging	= DebuggingClass();
 //	Variable für das OLED Display
 //
 char		g_chDebugString[ 18 ];
+
+uint32_t	g_ulBlinkTimer		= 0L;
+uint32_t	g_ulPausedTimer		= 0L;
+uint32_t	g_ulCheckPauseTime	= 0L;
+bool		g_bFcColonOn		= false;
+bool		g_bPauseTimeSet		= false;
 
 
 #if defined( COUNT_ALL_MESSAGES ) || defined( COUNT_MY_MESSAGES )
@@ -223,6 +260,53 @@ void DebuggingClass::Init( void )
 
 	{
 		g_clDisplay.Flip( true );
+	}
+}
+
+
+//******************************************************************
+//	Loop
+//------------------------------------------------------------------
+//
+void DebuggingClass::Loop( void )
+{
+	uint32_t	ulMillis = millis();
+
+	//----------------------------------------------------------
+	//	ist der FastClock Nachrichten Timeout abgelaufen ?
+	//	Wenn ja, dann alle Timer stoppen und PAUSED schreiben
+	//
+	if( (0 < g_ulPausedTimer) && (ulMillis > g_ulPausedTimer) )
+	{
+		g_ulPausedTimer	= 0L;
+		g_ulBlinkTimer	= 0L;
+
+		g_clDisplay.SetCursor( FASTCLOCK_LINE, FASTCLOCK_PAUSED_COLUMN );
+		g_clDisplay.SetInverse( true );
+		g_clDisplay.Print( F( " Paused " ) );
+		g_clDisplay.SetInverse( false );
+	}
+
+	//----------------------------------------------------------
+	//	Den Doppelpunkt zwischen Stunde und Minute
+	//	blinken lassen
+	//
+	if( (0 < g_ulBlinkTimer) && (ulMillis > g_ulBlinkTimer) )
+	{
+		g_ulBlinkTimer = ulMillis + FASTCLOCK_BLINK_TIME;
+
+		g_clDisplay.SetCursor( FASTCLOCK_LINE, FASTCLOCK_COLON_COLUMN );
+
+		if( g_bFcColonOn )
+		{
+			g_clDisplay.PrintChar( ' ' );
+			g_bFcColonOn = false;
+		}
+		else
+		{
+			g_clDisplay.PrintChar( ':' );
+			g_bFcColonOn = true;
+		}
 	}
 }
 
@@ -363,6 +447,54 @@ void DebuggingClass::PrintNotifyMsg( uint8_t usIdx, uint8_t usDirClosed, uint8_t
 
 #endif
 
+}
+
+
+//******************************************************************
+//	PrintFastClock
+//
+void DebuggingClass::PrintFastClock( uint8_t hour, uint8_t minute )
+{
+	uint32_t	ulMillis	= millis();
+
+	//------------------------------------------------------
+	//	zuerst den Blink-Timer für den Doppelpunkt starten
+	//
+	if( 0 == g_ulBlinkTimer )
+	{
+		g_ulBlinkTimer	= ulMillis;
+		g_bFcColonOn	= false;
+	}
+
+	//------------------------------------------------------
+	//	dann den FastClock Update Timeout ermitteln.
+	//	sollte der schon ermittelt sein, dann einfach
+	//	den Timeout-Timer (g_ulPausedTimer) starten
+	//
+	if( g_bPauseTimeSet )
+	{
+		g_ulPausedTimer = ulMillis + g_ulCheckPauseTime;
+	}
+	else if( 0 == g_ulCheckPauseTime )
+	{
+		g_ulCheckPauseTime = ulMillis;
+	}
+	else
+	{
+		g_ulCheckPauseTime	= (ulMillis - g_ulCheckPauseTime) * 3;
+		g_bPauseTimeSet		= true;
+	}
+
+	//--------------------------------------------------------------
+	//	zum Schluss noch die Zeit ausgeben
+	//
+	g_clDisplay.SetCursor( FASTCLOCK_LINE, FASTCLOCK_HOUR_COLUMN );
+	sprintf( g_chDebugString, "  FC:  %02d", hour );
+	g_clDisplay.Print( g_chDebugString );
+
+	g_clDisplay.SetCursor( FASTCLOCK_LINE, FASTCLOCK_MINUTE_COLUMN );
+	sprintf( g_chDebugString, "%02d  ", minute );
+	g_clDisplay.Print( g_chDebugString );
 }
 
 

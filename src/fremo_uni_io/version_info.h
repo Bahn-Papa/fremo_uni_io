@@ -90,7 +90,7 @@
 //----------------------------------------------------------------------
 //	version number
 //
-#define VERSION_MAIN			12
+#define VERSION_MAIN			13
 #define	VERSION_MINOR			0
 
 #define VERSION_NUMBER			((VERSION_MAIN * 100) + VERSION_MINOR)
@@ -106,6 +106,17 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	13.00		from: 30.09.2026
+//#
+//#	Implementation:
+//#		-	add output of fast clock time on debug display
+//#			changed files
+//#				fremo_uni_io.ino
+//#				my_loconet.cpp
+//#				debugging.cpp, debugging.h
 //#
 //#-------------------------------------------------------------------------
 //#
