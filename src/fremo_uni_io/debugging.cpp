@@ -7,6 +7,15 @@
 //#
 //#-------------------------------------------------------------------------
 //#
+//#	File version:	8		vom: 30.09.2026
+//#
+//#	Bug Fix:
+//#		-	wrong function call to inverse a text output
+//#			change in function
+//#				Loop()
+//#
+//#-------------------------------------------------------------------------
+//#
 //#	File version:	7		vom: 30.09.2026
 //#
 //#	Implementation:
@@ -282,9 +291,9 @@ void DebuggingClass::Loop( void )
 		g_ulBlinkTimer	= 0L;
 
 		g_clDisplay.SetCursor( FASTCLOCK_LINE, FASTCLOCK_PAUSED_COLUMN );
-		g_clDisplay.SetInverse( true );
+		g_clDisplay.SetInverseFont( true );
 		g_clDisplay.Print( F( " Paused " ) );
-		g_clDisplay.SetInverse( false );
+		g_clDisplay.SetInverseFont( false );
 	}
 
 	//----------------------------------------------------------

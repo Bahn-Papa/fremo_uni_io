@@ -91,7 +91,7 @@
 //	version number
 //
 #define VERSION_MAIN			13
-#define	VERSION_MINOR			0
+#define	VERSION_MINOR			1
 
 #define VERSION_NUMBER			((VERSION_MAIN * 100) + VERSION_MINOR)
 
@@ -106,6 +106,15 @@
 //##########################################################################
 //#
 //#		Version History:
+//#
+//#-------------------------------------------------------------------------
+//#
+//#	Version:	13.01		from: 30.09.2026
+//#
+//#	Bug Fix:
+//#		-	wrong function call to inverse a text output
+//#			changed file
+//#				debugging.cpp
 //#
 //#-------------------------------------------------------------------------
 //#
