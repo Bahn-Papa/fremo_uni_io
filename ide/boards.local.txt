@@ -1,0 +1,70 @@
+# See: https://arduino.github.io/arduino-cli/latest/platform-specification/
+
+menu.cpu=Application (Article No)
+
+##############################################################
+
+fremo.name=FREMO Boards
+
+fremo.upload.tool=avrdude
+fremo.upload.tool.default=avrdude
+fremo.upload.tool.network=arduino_ota
+
+fremo.bootloader.tool=avrdude
+fremo.bootloader.unlock_bits=0x3F
+fremo.bootloader.lock_bits=0x0F
+
+fremo.build.board=AVR_CHIP
+fremo.build.core=arduino
+fremo.build.variant=standard
+
+##------------------------------------------------------------------
+##
+## Universal I/O Platine
+##
+##	1512  mit ATmega32U4 16 MHz
+##---------------------------------------------------------
+fremo.menu.cpu.1512=Universal I/O    (1512, ATmega32U4  16 MHz)
+
+fremo.menu.cpu.1512.vid.0=0x2341
+fremo.menu.cpu.1512.pid.0=0x0036
+fremo.menu.cpu.1512.vid.1=0x2341
+fremo.menu.cpu.1512.pid.1=0x8036
+fremo.menu.cpu.1512.vid.2=0x2A03
+fremo.menu.cpu.1512.pid.2=0x0036
+fremo.menu.cpu.1512.vid.3=0x2A03
+fremo.menu.cpu.1512.pid.3=0x8036
+fremo.menu.cpu.1512.upload_port.0.vid=0x2341
+fremo.menu.cpu.1512.upload_port.0.pid=0x0036
+fremo.menu.cpu.1512.upload_port.1.vid=0x2341
+fremo.menu.cpu.1512.upload_port.1.pid=0x8036
+fremo.menu.cpu.1512.upload_port.2.vid=0x2A03
+fremo.menu.cpu.1512.upload_port.2.pid=0x0036
+fremo.menu.cpu.1512.upload_port.3.vid=0x2A03
+fremo.menu.cpu.1512.upload_port.3.pid=0x8036
+fremo.menu.cpu.1512.upload_port.4.board=leonardo
+
+fremo.menu.cpu.1512.upload.protocol=avr109
+fremo.menu.cpu.1512.upload.maximum_size=28672
+fremo.menu.cpu.1512.upload.maximum_data_size=2560
+fremo.menu.cpu.1512.upload.speed=57600
+fremo.menu.cpu.1512.upload.disable_flushing=true
+fremo.menu.cpu.1512.upload.use_1200bps_touch=true
+fremo.menu.cpu.1512.upload.wait_for_upload_port=true
+
+fremo.menu.cpu.1512.bootloader.low_fuses=0xFF
+fremo.menu.cpu.1512.bootloader.high_fuses=0xDF
+fremo.menu.cpu.1512.bootloader.extended_fuses=0xFD
+fremo.menu.cpu.1512.bootloader.file=fremo/BootLoader_1512.hex
+fremo.menu.cpu.1512.bootloader.unlock_bits=0x3F
+fremo.menu.cpu.1512.bootloader.lock_bits=0x2F
+
+fremo.menu.cpu.1512.build.mcu=atmega32u4
+fremo.menu.cpu.1512.build.f_cpu=16000000L
+fremo.menu.cpu.1512.build.vid=0x2341
+fremo.menu.cpu.1512.build.pid=0x8036
+fremo.menu.cpu.1512.build.usb_product="Arduino Leonardo"
+fremo.menu.cpu.1512.build.board=AVR_LEONARDO
+fremo.menu.cpu.1512.build.core=arduino
+fremo.menu.cpu.1512.build.variant=leonardo
+fremo.menu.cpu.1512.build.extra_flags={build.usb_flags} -DARTICLE_NUMBER=1512
